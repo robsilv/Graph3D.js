@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>three.js canvas - combo camera - orthographic + perspective</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+				color: purple;
+			}
+
+			a {
+				color: red;
+			}
+		</style>
+	</head>
+	<body>
+
+		<script src="../js/libs/three.js/build/Three.js"></script>
+		<script src="../js/libs/three.js/src/extras/cameras/CombinedCamera.js"></script>
+
+		<script src="../js/libs/three.js/examples/js/Stats.js"></script>
+		
+		<script src="../js/stats3d/Stats3D.js"></script>
+		<script src="../js/stats3d/common/ui/views/GraphView.js"></script>
+		<script src="../js/stats3d/examples/example1/Main.js"></script>
+
+		<div style="position: absolute; top: 10px; width: 100%; text-align: center; ">
+
+			Views:
+				<button id="bottomView">Bottom View (X &amp; Z)</button>
+				<button id="leftView">Left View (Y &amp; Z)</button>
+				<button id="frontView">Front View (X &amp; Y)</button>
+				<button id="overView">Free View</button>
+				<br/>
+			<div id="fov"></div>
+		</div>
+
+	</body>
+</html>

@@ -1,9 +1,33 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>three.js canvas - combo camera - orthographic + perspective</title>
+		<title>Stats3D.js: example 1</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		
+		<!-- Libs -->
+		<script type="application/javascript" src="../js/libs/three.js/build/Three.js"></script>
+		<script type="application/javascript" src="../js/libs/three.js/src/extras/cameras/CombinedCamera.js"></script>
+		<script type="application/javascript" src="../js/libs/three.js/examples/js/Stats.js"></script>
+		
+		<!-- Global -->
+		<script type="application/javascript" src="../js/stats3d/Stats3D.js"></script>
+		
+		<!-- Utils -->
+		<script type="application/javascript" src="../js/stats3d/utils/events/ListenerFunctions.js"></script>
+		<script type="application/javascript" src="../js/stats3d/utils/events/EventDispatcher.js"></script>
+		<script type="application/javascript" src="../js/stats3d/utils/loading/TextLoader.js"></script>
+		
+		<!-- Common -->
+		<script type="application/javascript" src="../js/stats3d/common/data/DataModel.js"></script>
+		<script type="application/javascript" src="../js/stats3d/common/ui/views/GraphView.js"></script>
+		
+		<!-- This example's JS -->
+		<script type="application/javascript" src="../js/stats3d/examples/example1/Main.js"></script>
+		
+		<!-- Global CSS -->	
+		
+		<!-- This example's CSS -->
 		<style>
 			body {
 				font-family: Monospace;
@@ -16,19 +40,10 @@
 			a {
 				color: red;
 			}
-		</style>
+		</style>		
 	</head>
 	<body>
-
-		<script src="../js/libs/three.js/build/Three.js"></script>
-		<script src="../js/libs/three.js/src/extras/cameras/CombinedCamera.js"></script>
-
-		<script src="../js/libs/three.js/examples/js/Stats.js"></script>
-		
-		<script src="../js/stats3d/Stats3D.js"></script>
-		<script src="../js/stats3d/common/ui/views/GraphView.js"></script>
-		<script src="../js/stats3d/examples/example1/Main.js"></script>
-
+	
 		<div style="position: absolute; top: 10px; width: 100%; text-align: center; ">
 
 			Views:

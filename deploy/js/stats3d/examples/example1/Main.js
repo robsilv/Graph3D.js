@@ -9,6 +9,8 @@
 		
 		var graphView = GraphView.create();
 		var dataModel = DataModel.create();
+		dataModel.addEventListener( "loadComplete", function() { graphView.setDataProvider(dataModel.getData()); } );
+		dataModel.load();
 		
 	}), false);
 	

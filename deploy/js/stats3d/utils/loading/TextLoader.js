@@ -78,7 +78,7 @@
 			}
 		};
 		
-		p.destroy = function() {
+		p.destroy = function destroy() {
 			
 		}
 	}

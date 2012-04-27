@@ -1,7 +1,7 @@
 (function(){
 
 var namespace = STATS3D.namespace("STATS3D.common.ui.views");
-
+var GraphUtils = STATS3D.namespace("STATS3D.common.data").GraphUtils;
 //var EventDispatcher = STATS3D.namespace("STATS3D.utils.events").EventDispatcher;
 
 if(namespace.GraphView === undefined) 
@@ -25,6 +25,8 @@ if(namespace.GraphView === undefined)
 	{
 		//var container, stats;
 		//var camera, scene, renderer;
+		this.dataProvider = null;
+		this._graphUtils = GraphUtils.create();
 		
 		this._offsetTop = 400;
 		
@@ -43,13 +45,13 @@ if(namespace.GraphView === undefined)
 		this._scene.position.y = this._offsetTop;
 
 		
-		var axisLength = 1000;
+		this._axisLength = 1000;
 		
 		// Grid
 
 		var geometry = new THREE.Geometry();
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( axisLength, 0, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0, 0 ) );
 
 		for ( var i = 0; i <= 20; i ++ ) {
 
@@ -59,7 +61,7 @@ if(namespace.GraphView === undefined)
 
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.x = ( i * 50 );
-			line.position.z = axisLength;
+			line.position.z = this._axisLength;
 			line.rotation.y = 90 * Math.PI / 180;
 			this._scene.add( line );
 
@@ -95,7 +97,7 @@ if(namespace.GraphView === undefined)
 		// X-AXIS (red)
 		var geometry = new THREE.Geometry();
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( axisLength, 0, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0, 0 ) );
 
 		var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xff0000, opacity: 0.5 } ) );
 		this._scene.add( line );
@@ -103,7 +105,7 @@ if(namespace.GraphView === undefined)
 		// Y-AXIS (green)
 		var geometry = new THREE.Geometry();
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( 0, axisLength, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( 0, this._axisLength, 0 ) );
 
 		var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x00ff00, opacity: 0.5 } ) );
 		this._scene.add( line );
@@ -111,7 +113,7 @@ if(namespace.GraphView === undefined)
 		// Z-AXIS (blue)
 		var geometry = new THREE.Geometry();
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( 0, 0, axisLength ) );
+		geometry.vertices.push( new THREE.Vector3( 0, 0, this._axisLength ) );
 
 		var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x0000ff, opacity: 0.5 } ) );
 		this._scene.add( line );			
@@ -336,7 +338,29 @@ if(namespace.GraphView === undefined)
 		}
 	
 		this._renderer.render( this._scene, this._camera );
-	}	
+	}
+	
+	p.setDataProvider = function setDataProvider(data)
+	{
+		var numSteps = 20;
+		
+		this._dataProvider = data;
+		this._yAxisValues = this._graphUtils.mapToAxis(data.hivPrevalence.minValue, data.hivPrevalence.maxValue, numSteps);
+		
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( new THREE.Vector3( -20, 0, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+
+		for ( var i = 0; i <= numSteps; i ++ ) {
+
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position.y = ( i * (this._axisLength/numSteps) );
+			this._scene.add( line );
+
+		}		
+		
+		//this._graphUtils.mapToAxis(data.population.minValue, data.population.maxValue, 20);
+	}
 }
 
 })();	

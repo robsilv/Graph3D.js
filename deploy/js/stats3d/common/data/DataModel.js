@@ -4,7 +4,7 @@ var namespace = STATS3D.namespace("STATS3D.common.data");
 	
 var ListenerFunctions = STATS3D.namespace("STATS3D.utils.events").ListenerFunctions;
 var TextLoader = STATS3D.namespace("STATS3D.utils.loading").TextLoader;
-//var EventDispatcher = STATS3D.namespace("STATS3D.utils.events").EventDispatcher;
+var EventDispatcher = STATS3D.namespace("STATS3D.utils.events").EventDispatcher;
 
 if(namespace.DataModel === undefined) 
 {
@@ -14,7 +14,7 @@ if(namespace.DataModel === undefined)
 	
 	namespace.DataModel = DataModel;
 		
-	var p = DataModel.prototype = {};//new EventDispatcher();
+	var p = DataModel.prototype = new EventDispatcher();
 	
 	DataModel.create = function create() 
 	{
@@ -24,9 +24,7 @@ if(namespace.DataModel === undefined)
 	
 	p._init = function _init()
 	{
-		this._global = {};
-		this._regions = [];
-		this._countries = {};	// countries lookup table
+		this._global = { regions:[], countries:{} };
 		
 		this._regionsLoadedCallback = ListenerFunctions.createListenerFunction(this, this._regionsLoaded);
 		this._populationLoadedCallback = ListenerFunctions.createListenerFunction(this, this._populationsLoaded);
@@ -35,9 +33,6 @@ if(namespace.DataModel === undefined)
 		this._regionsUrl = "../files/data/Geographic_Regions.csv";
 		this._populationUrl = "../files/data/Population.csv";
 		this._hivPrevUrl = "../files/data/Estimated_HIV_Prevalence_Ages_15-49.csv";
-		
-		this._regionsLoader = this._createLoader(this._regionsUrl, this._regionsLoadedCallback);
-		this._regionsLoader.load();
 	}
 	
 	p.destroy = function destroy() 
@@ -61,6 +56,12 @@ if(namespace.DataModel === undefined)
 		newLoader.addEventListener(TextLoader.LOADED, callBack, false);
 		
 		return newLoader;
+	}
+	
+	p.load = function load()
+	{
+		this._regionsLoader = this._createLoader(this._regionsUrl, this._regionsLoadedCallback);
+		this._regionsLoader.load();	
 	}
 	
 	p._regionsLoaded = function _regionsLoaded(aEvent) 
@@ -90,6 +91,8 @@ if(namespace.DataModel === undefined)
 		
 		var scope = this;
 		this._parseTable(data, function(column, years, i) { scope._parseHIVPrev(column, years, i) });
+		
+		this.dispatchEvent( { type:"loadComplete" } );
 	}
 	
 	p._cleanData = function _cleanData(data)
@@ -117,7 +120,7 @@ if(namespace.DataModel === undefined)
 		// store column titles
 		for (var i = 0; i < column.length; i ++) 
 		{
-			this._regions.push({region:column[i], countries:[]});        
+			this._global.regions.push({region:column[i], countries:[]});        
 		}
 
 		// loop through all rows
@@ -134,13 +137,13 @@ if(namespace.DataModel === undefined)
 				{
 					for ( var j = 0; j < column.length; j ++ )
 					{
-						var region = this._regions[j];
+						var region = this._global.regions[j];
 						var country = column[j];
 						if (region) {
 							if (country.length > 0 ) {
-								var countryObj = { country:country, region:region };
+								var countryObj = { name:country, region:region };
 								region.countries.push(countryObj);
-								this._countries[country] = countryObj;
+								this._global.countries[country] = countryObj;
 							}
 						} else {
 							console.log("NO REGION "+j+" country "+column[j]);
@@ -193,7 +196,7 @@ if(namespace.DataModel === undefined)
 	{
 		// remove row title element
 		var rowTitle = column.shift();				
-		var country = this._countries[rowTitle];
+		var country = this._global.countries[rowTitle];
 		
 		// skip col titles row
 		if (i != 0) 
@@ -223,42 +226,9 @@ if(namespace.DataModel === undefined)
 						country.population[year] = pop;
 						
 						// set region bounds
-						if ( year > region.population.maxYear )
-							region.population.maxYear = year;
-						if ( year < region.population.minYear )
-							region.population.minYear = year;						
-						
-						if ( pop > region.population.maxValue )
-						{
-							region.population.maxValue = pop;
-							region.population.maxValueCountry = country;
-							region.population.maxValueYear = year;	
-						}
-						if ( pop < region.population.minValue )
-						{
-							region.population.minValue = pop;
-							region.population.minValueCountry = country;
-							region.population.minValueYear = year;	
-						}
-						
+						this._setBounds(region.population, year, pop, country);
 						// set global bounds
-						if ( year > global.population.maxYear )
-							global.population.maxYear = year;
-						if ( year < global.population.minYear )
-							global.population.minYear = year;						
-						
-						if ( pop > global.population.maxValue )
-						{
-							global.population.maxValue = pop;
-							global.population.maxValueCountry = country;
-							global.population.maxValueYear = year;	
-						}
-						if ( pop < global.population.minValue )
-						{
-							global.population.minValue = pop;
-							global.population.minValueCountry = country;
-							global.population.minValueYear = year;							
-						}
+						this._setBounds(global.population, year, pop, country);
 					}
 				}
 			} else {
@@ -271,7 +241,7 @@ if(namespace.DataModel === undefined)
 	{
 		// remove row title element
 		var rowTitle = column.shift();				
-		var country = this._countries[rowTitle];
+		var country = this._global.countries[rowTitle];
 		
 		// skip col titles row
 		if (i != 0) 
@@ -301,48 +271,41 @@ if(namespace.DataModel === undefined)
 						country.hivPrevalence[year] = value;
 						
 						// set region bounds
-						if ( year > region.hivPrevalence.maxYear )
-							region.hivPrevalence.maxYear = year;
-						if ( year < region.hivPrevalence.minYear )
-							region.hivPrevalence.minYear = year;						
-						
-						if ( value > region.hivPrevalence.maxValue )
-						{
-							region.hivPrevalence.maxValue = value;
-							region.hivPrevalence.maxValueCountry = country;
-							region.hivPrevalence.maxValueYear = year;							
-						}
-						if ( value < region.hivPrevalence.minValue )
-						{
-							region.hivPrevalence.minValue = value;
-							region.hivPrevalence.minValueCountry = country;
-							region.hivPrevalence.minValueYear = year;							
-						}
-						
+						this._setBounds(region.hivPrevalence, year, value, country);
 						// set global bounds
-						if ( year > global.hivPrevalence.maxYear )
-							global.hivPrevalence.maxYear = year;
-						if ( year < global.hivPrevalence.minYear )
-							global.hivPrevalence.minYear = year;						
-						
-						if ( value > global.hivPrevalence.maxValue )
-						{
-							global.hivPrevalence.maxValue = value;
-							global.hivPrevalence.maxValueCountry = country;
-							global.hivPrevalence.maxValueYear = year;
-						}
-						if ( value < global.hivPrevalence.minValue )
-						{
-							global.hivPrevalence.minValue = value;
-							global.hivPrevalence.minValueCountry = country;
-							global.hivPrevalence.minValueYear = year;
-						}
+						this._setBounds(global.hivPrevalence, year, value, country);
 					}
 				}
 			} else {
 				console.log("Entry for \""+rowTitle+"\" in Pop.csv but not in HIV.csv");
 			}
 		}		
+	}
+	
+	p._setBounds = function _setBounds(obj, year, value, country)
+	{
+		if ( year > obj.maxYear )
+			obj.maxYear = year;
+		if ( year < obj.minYear )
+			obj.minYear = year;						
+		
+		if ( value > obj.maxValue )
+		{
+			obj.maxValue = value;
+			obj.maxValueCountry = country;
+			obj.maxValueYear = year;
+		}
+		if ( value < obj.minValue )
+		{
+			obj.minValue = value;
+			obj.minValueCountry = country;
+			obj.minValueYear = year;
+		}
+	}
+	
+	p.getData = function getData()
+	{
+		return this._global;
 	}
 	
 }

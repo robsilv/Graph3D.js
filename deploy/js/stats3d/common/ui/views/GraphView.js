@@ -28,7 +28,7 @@ if(namespace.GraphView === undefined)
 		this.dataProvider = null;
 		this._graphUtils = GraphUtils.create();
 		
-		this._offsetTop = 400;
+		this._offsetTop = 600;
 		
 		this._container = document.createElement( 'div' );
 		document.body.appendChild( this._container );
@@ -56,20 +56,22 @@ if(namespace.GraphView === undefined)
 		for ( var i = 0; i <= 20; i ++ ) {
 
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.z = ( i * 50 );
+			line.position.z = ( i * 50 ) - this._axisLength;
 			this._scene.add( line );
 
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.x = ( i * 50 );
-			line.position.z = this._axisLength;
+			line.position.z = 0;//-this._axisLength;
 			line.rotation.y = 90 * Math.PI / 180;
 			this._scene.add( line );
 
 		}
 
 		// Cubes
-
-		var geometry = new THREE.CubeGeometry( 50, 50, 50 );
+/*
+		//var geometry = new THREE.CubeGeometry( 50, 50, 50 );
+		var numSegments = 8;
+		var geometry = new THREE.SphereGeometry( 20, numSegments, numSegments );
 		var material = new THREE.MeshLambertMaterial( { color: 0xffffff, shading: THREE.FlatShading, overdraw: true } );
 
 		
@@ -77,11 +79,11 @@ if(namespace.GraphView === undefined)
 
 			var cube = new THREE.Mesh( geometry, material );
 
-			cube.scale.y = Math.floor( Math.random() * 2 + 1 );
+			//cube.scale.y = Math.floor( Math.random() * 2 + 1 );
 
-			cube.position.x = Math.floor( ( Math.random() * 1000 ) / 50 ) * 50 + 25;
+			cube.position.x = Math.floor( ( Math.random() * this._axisLength ) / 50 ) * 50 + 25;
 			cube.position.y = ( cube.scale.y * 50 ) / 2;
-			cube.position.z = Math.floor( ( Math.random() * 1000 ) / 50 ) * 50 + 25;
+			cube.position.z = Math.floor( ( Math.random() * -this._axisLength ) / 50 ) * 50 + 25;
 
 			this._scene.add(cube);
 
@@ -91,8 +93,9 @@ if(namespace.GraphView === undefined)
 
 		cube.position.x = 500;
 		cube.position.y = 500;
-		cube.position.z = 500;
+		cube.position.z = -500;
 		this._scene.add(cube);
+		*/
 		
 		// X-AXIS (red)
 		var geometry = new THREE.Geometry();
@@ -113,7 +116,7 @@ if(namespace.GraphView === undefined)
 		// Z-AXIS (blue)
 		var geometry = new THREE.Geometry();
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( 0, 0, this._axisLength ) );
+		geometry.vertices.push( new THREE.Vector3( 0, 0, -this._axisLength ) );
 
 		var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x0000ff, opacity: 0.5 } ) );
 		this._scene.add( line );			
@@ -136,9 +139,10 @@ if(namespace.GraphView === undefined)
 		directionalLight.position.y = Math.random() - 0.5;
 		directionalLight.position.z = Math.random() - 0.5;
 		directionalLight.position.normalize();
-		this._scene.add( directionalLight );
+		this._scene.add( directionalLight );		
 
-		this._renderer = new THREE.CanvasRenderer();
+		//this._renderer = new THREE.CanvasRenderer();
+		this._renderer = new THREE.WebGLRenderer({ antialias: true } );
 		this._renderer.setSize( window.innerWidth, window.innerHeight );
 
 		this._container.appendChild( this._renderer.domElement );
@@ -148,6 +152,7 @@ if(namespace.GraphView === undefined)
 		this._stats.domElement.style.top = '0px';
 		this._container.appendChild( this._stats.domElement );
 
+		
 		var scope = this;
 		window.addEventListener( 'resize', function() { scope._onWindowResize() }, false );
 		
@@ -184,22 +189,16 @@ if(namespace.GraphView === undefined)
 		this.setLens(12);
 		this.toOverView();
 		
-		//this._topViewButton = document.getElementById("topView");
-		this._bottomViewButton = document.getElementById("bottomView");
-		this._leftViewButton = document.getElementById("leftView");
-		//this._rightViewButton = document.getElementById("rightView");
+		this._topViewButton = document.getElementById("topView");
+		this._rightViewButton = document.getElementById("rightView");
 		this._frontViewButton = document.getElementById("frontView");
-		//this._backViewButton = document.getElementById("backView");
 		this._overViewButton = document.getElementById("overView");
 		
 		var scope = this;
 		
-		//this._topViewButton.addEventListener( "click", function() { scope.toTopView(); } );
-		this._bottomViewButton.addEventListener( "click", function() { scope.toBottomView(); } );
-		this._leftViewButton.addEventListener( "click", function() { scope.toLeftView(); } );
-		//this._rightViewButton.addEventListener( "click", function() { scope.toRightView(); } );
+		this._topViewButton.addEventListener( "click", function() { scope.toTopView(); } );
+		this._rightViewButton.addEventListener( "click", function() { scope.toRightView(); } );
 		this._frontViewButton.addEventListener( "click", function() { scope.toFrontView(); } );
-		//this._backViewButton.addEventListener( "click", function() { scope.toBackView(); } );
 		this._overViewButton.addEventListener( "click", function() { scope.toOverView(); } );
 		
 		var windowHalfX = window.innerWidth / 2;
@@ -231,34 +230,16 @@ if(namespace.GraphView === undefined)
 		this._camera.position.z = 200;	
 	}
 	
-	/*
 	p.toTopView = function toTopView()
 	{
 		this._toFixedView();
 		this._camera.toTopView();
+		this._camera.position.z = -this._offsetTop;
 	}
 	p.toRightView = function toRightView()
 	{
 		this._toFixedView();
 		this._camera.toRightView();
-	}
-	p.toBackView = function toBackView()
-	{
-		this._toFixedView();
-		this._camera.toBackView();
-	}
-	*/
-	
-	p.toBottomView = function toBottomView()
-	{
-		this._toFixedView();
-		this._camera.toBottomView();
-		this._camera.position.z = this._offsetTop;
-	}
-	p.toLeftView = function toLeftView()
-	{
-		this._toFixedView();
-		this._camera.toLeftView();
 		this._camera.position.y = this._offsetTop;
 	}
 	p.toFrontView = function toFrontView()
@@ -345,21 +326,265 @@ if(namespace.GraphView === undefined)
 		var numSteps = 20;
 		
 		this._dataProvider = data;
+		
+		
+		// Compute X-Axis (GDP)
+		this._xAxisValues = this._graphUtils.mapToAxis(data.gdpPerCapita.minValue, data.gdpPerCapita.maxValue, numSteps);
+		
+		// draw X-Axis lines
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( new THREE.Vector3( 0, -20, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		
+		var axisNum = this._xAxisValues.minVal;
+		
+		for ( var i = 0; i <= numSteps; i ++ )
+		{
+			var xpos = ( i * (this._axisLength/numSteps) );
+		
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position.x = xpos;
+			this._scene.add( line );
+			
+			
+			var text = this._createText(axisNum.toString());
+			text.position.x = xpos - 10;
+			text.position.y -= 50;
+			text.rotation.z = Math.PI + Math.PI/2;
+			
+			axisNum += this._xAxisValues.stepSize;
+
+		}
+		
+		
+		// Compute Y-Axis (HIV)
 		this._yAxisValues = this._graphUtils.mapToAxis(data.hivPrevalence.minValue, data.hivPrevalence.maxValue, numSteps);
 		
+		// draw Y-Axis lines
 		var geometry = new THREE.Geometry();
 		geometry.vertices.push( new THREE.Vector3( -20, 0, 0 ) );
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-
-		for ( var i = 0; i <= numSteps; i ++ ) {
-
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.y = ( i * (this._axisLength/numSteps) );
-			this._scene.add( line );
-
-		}		
 		
-		//this._graphUtils.mapToAxis(data.population.minValue, data.population.maxValue, 20);
+		var axisNum = this._yAxisValues.minVal;
+		
+		for ( var i = 0; i <= numSteps; i ++ )
+		{
+			var ypos = ( i * (this._axisLength/numSteps) );
+		
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position.y = ypos;
+			this._scene.add( line );
+			
+			
+			var text = this._createText(axisNum.toString());
+			text.position.y = ypos - 10;
+			text.position.x -= 40;
+			
+			axisNum += this._yAxisValues.stepSize;
+
+		}
+		
+		// Compute Z-Axis (Time)
+		this._zAxisValues = this._graphUtils.mapToAxis(data.time.minYear, data.time.maxYear, numSteps);
+		
+		// draw Z-Axis lines
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( new THREE.Vector3( -20, 0, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		
+		var axisNum = this._zAxisValues.minVal;
+		
+		for ( var i = 0; i <= numSteps; i ++ )
+		{
+			var zpos = -( i * (this._axisLength/numSteps) );
+		
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position.z = zpos;
+			this._scene.add( line );
+			
+			
+			var text = this._createText(axisNum.toString());
+			text.position.z = zpos + 10;
+			text.position.x -= 40;
+			text.rotation.x = -Math.PI/2;
+			//text.rotation.z = Math.PI + Math.PI/2;
+			
+			axisNum += this._zAxisValues.stepSize;
+		}
+		
+		// draw line for country
+		//var country = data.countries["Lesotho"];
+		
+		for ( var country in data.countries ) 
+		{
+			this._plotData(data.countries[country]);
+		}
+		
+
+		
+		// YPOS
+		/*
+		var diffFromZero = 1800 - this._zAxisValues.minVal;
+		var valueLengthOfAxis = this._zAxisValues.maxVal - this._zAxisValues.minVal;
+		var ratio = diffFromZero / valueLengthOfAxis;
+		
+		zpos = -ratio * this._axisLength;		
+		*/
+		
+		console.log("Z (Time) axis minVal "+this._zAxisValues.minVal+" maxVal "+this._zAxisValues.maxVal);
+	}
+	
+	p._plotData = function _plotData(country)
+	{		
+		// massage data
+		var yearsObj = {};
+		for ( var year in country.gdpPerCapita )
+		{
+			var value = country.gdpPerCapita[year];
+			
+			if (!yearsObj[year]) {
+				yearsObj[year] = {};
+			}
+			
+			yearsObj[year].gdpPerCapita = value;
+		}
+		
+		for ( var year in country.hivPrevalence )
+		{
+			var value = country.hivPrevalence[year];
+			if (!yearsObj[year]) {
+				yearsObj[year] = {};
+			}
+			
+			yearsObj[year].hivPrevalence = value;
+		}
+		
+		// draw
+		var PI2 = Math.PI * 2;
+		var material = new THREE.ParticleCanvasMaterial( {
+
+			color: 0xAAAAAA,
+			program: function ( context ) {
+
+				context.beginPath();
+				context.arc( 0, 0, 1, 0, PI2, true );
+				context.closePath();
+				context.fill();
+
+			}
+
+		} );
+		
+		var geometry = new THREE.Geometry();		
+		
+		var prevHIVValue = 0;
+		var prevGDPValue = 0;
+		
+		for ( var year in yearsObj )
+		{
+			var gdp = yearsObj[year].gdpPerCapita;
+			var hiv = yearsObj[year].hivPrevalence;
+			console.log(year+" = "+value);
+			
+					
+			if (!gdp) 	gdp = prevGDPValue;
+			else		prevGDPValue = gdp;
+			if (!hiv) 	hiv = prevHIVValue;
+			else		prevHIVValue = hiv;
+			
+			// XPOS
+			var diffFromZero = gdp - this._xAxisValues.minVal;
+			var valueLengthOfAxis = this._xAxisValues.maxVal - this._xAxisValues.minVal;
+			var ratio = diffFromZero / valueLengthOfAxis;
+			
+			xpos = ratio * this._axisLength;
+			
+			// YPOS
+			var diffFromZero = hiv - this._yAxisValues.minVal;
+			var valueLengthOfAxis = this._yAxisValues.maxVal - this._yAxisValues.minVal;
+			var ratio = diffFromZero / valueLengthOfAxis;
+			
+			ypos = ratio * this._axisLength;			
+
+			// ZPOS
+			var diffFromZero = year - this._zAxisValues.minVal;
+			var valueLengthOfAxis = this._zAxisValues.maxVal - this._zAxisValues.minVal;
+			var ratio = diffFromZero / valueLengthOfAxis;
+			
+			zpos = -ratio * this._axisLength;
+/*
+			var numSegments = 8;
+			var geometry = new THREE.SphereGeometry( 20, numSegments, numSegments );
+			var material = new THREE.MeshLambertMaterial( { color: 0xffffff, shading: THREE.FlatShading, overdraw: true } );
+
+			var sphere = new THREE.Mesh( geometry, material );
+			sphere.position.x = xpos;
+			sphere.position.z = zpos;
+
+			this._scene.add(sphere);
+*/
+			// particles
+			var pos = new THREE.Vector3( xpos, ypos, zpos )
+			var particle = new THREE.Particle( material );
+			particle.position.x = pos.x;
+			particle.position.y = pos.y;
+			particle.position.z = pos.z;
+			//particle.position.normalize();
+			//particle.position.multiplyScalar( Math.random() * 10 + 450 );
+			particle.scale.x = particle.scale.y = 5;
+			this._scene.add( particle );
+
+			geometry.vertices.push( pos );		
+		}
+		
+		// lines
+
+		var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xFFFFFF * Math.random(), opacity: 0.5 } ) );
+		this._scene.add( line );
+	}
+	
+	p._createText = function _createText(str)
+	{
+		// Get text from hash
+		var hash = document.location.hash.substr( 1 );
+
+		if ( hash.length !== 0 ) {
+
+			str = hash;
+
+		}
+
+		var text3d = new THREE.TextGeometry( str, {
+
+			size: 16,
+			height: 1,
+			curveSegments: 2,
+			font: "helvetiker"
+
+		});
+
+		text3d.computeBoundingBox();
+		var centerOffset = -0.5 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
+		var rightOffset = -1 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
+		
+		var textMaterial = new THREE.MeshBasicMaterial( { color:  0x000000, overdraw: true } );
+		var text = new THREE.Mesh( text3d, textMaterial );
+
+		text.doubleSided = false;
+
+		var parent = new THREE.Object3D();
+		parent.add( text );
+
+		parent.position.x = rightOffset;
+		parent.position.y = 20;
+		parent.position.z = 0;
+
+		parent.rotation.x = 0;
+		parent.rotation.y = Math.PI * 2;		
+		
+		this._scene.add( parent );
+		
+		return parent;
 	}
 }
 

@@ -57,13 +57,14 @@
 			var graphMinVal = 0;
 			// minVal must not be zero
 			if ( stepSize * numSteps < maxVal ) {
-			
+				graphMinVal = Math.floor(minVal);
+				//console.log("MIN VAL NOT ZERO "+minVal);
 			}
 			
 			console.log("minVal "+minVal+" maxVal "+maxVal+" numSteps "+numSteps+" stepSize "+stepSize);
 			
 			
-			return { minVal: graphMinVal, stepSize:stepSize, numSteps:numSteps }; 
+			return { minVal: graphMinVal, maxVal: minVal + (stepSize * numSteps), stepSize:stepSize, numSteps:numSteps }; 
 		}
 	}
 })();

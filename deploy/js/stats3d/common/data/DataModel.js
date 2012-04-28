@@ -29,10 +29,12 @@ if(namespace.DataModel === undefined)
 		this._regionsLoadedCallback = ListenerFunctions.createListenerFunction(this, this._regionsLoaded);
 		this._populationLoadedCallback = ListenerFunctions.createListenerFunction(this, this._populationsLoaded);
 		this._hivLoadedCallback = ListenerFunctions.createListenerFunction(this, this._hivLoaded);
+		this._gdpLoadedCallback = ListenerFunctions.createListenerFunction(this, this._gdpLoaded);
 		
 		this._regionsUrl = "../files/data/Geographic_Regions.csv";
 		this._populationUrl = "../files/data/Population.csv";
 		this._hivPrevUrl = "../files/data/Estimated_HIV_Prevalence_Ages_15-49.csv";
+		this._gdpPerCapitaUrl = "../files/data/GDP_per_capita_(1800-2010)_2005_Int_dollars.csv";
 	}
 	
 	p.destroy = function destroy() 
@@ -92,7 +94,17 @@ if(namespace.DataModel === undefined)
 		var scope = this;
 		this._parseTable(data, function(column, years, i) { scope._parseHIVPrev(column, years, i) });
 		
-		this.dispatchEvent( { type:"loadComplete" } );
+		this._gdpLoader = this._createLoader(this._gdpPerCapitaUrl, this._gdpLoadedCallback);
+		this._gdpLoader.load();
+	}
+	p._gdpLoaded = function _gdpLoaded(aEvent)
+	{
+		var data = this._gdpLoader.getData();
+		
+		var scope = this;
+		this._parseTable(data, function(column, years, i) { scope._parseGDPPerCapita(column, years, i) });
+		
+		this.dispatchEvent( { type:"loadComplete" } );	
 	}
 	
 	p._cleanData = function _cleanData(data)
@@ -194,50 +206,19 @@ if(namespace.DataModel === undefined)
 	
 	p._parsePopulation = function _parsePopulation(column, years, i)
 	{
-		// remove row title element
-		var rowTitle = column.shift();				
-		var country = this._global.countries[rowTitle];
-		
-		// skip col titles row
-		if (i != 0) 
-		{
-			if (country) 
-			{
-				var global = this._global;
-				if (!global.population) {
-					global.population = { minYear:10000, maxYear:0, minValue:10000000000, maxValue:0 };
-				}
-				
-				var region = country.region;
-				if (!region.population) {
-					region.population = { minYear:10000, maxYear:0, minValue:10000000000, maxValue:0 };
-				}
-				
-				for (var j = 0; j < column.length; j++)
-				{
-					var pop = parseFloat(column[j]);
-					if (!isNaN(pop)) {
-						var year = parseInt(years[j]);
-						
-						//console.log(rowTitle+" : "+year+" : "+pop);
-						if (!country.population) {
-							country.population = {};
-						}
-						country.population[year] = pop;
-						
-						// set region bounds
-						this._setBounds(region.population, year, pop, country);
-						// set global bounds
-						this._setBounds(global.population, year, pop, country);
-					}
-				}
-			} else {
-				console.log("Entry for \""+rowTitle+"\" in Pop.csv but not in Regions.csv");
-			}
-		}	
+		this._parseColumn("population", column, years, i);
 	}
 	
 	p._parseHIVPrev = function _parseHIVPrev(column, years, i)
+	{
+		this._parseColumn("hivPrevalence", column, years, i);
+	}
+	p._parseGDPPerCapita = function _parseGDPPerCapita(column, years, i)
+	{
+		this._parseColumn("gdpPerCapita", column, years, i);
+	}
+	
+	p._parseColumn = function _parseColumn(prop, column, years, i)
 	{
 		// remove row title element
 		var rowTitle = column.shift();				
@@ -249,14 +230,20 @@ if(namespace.DataModel === undefined)
 			if (country) 
 			{
 				var global = this._global;
-				if (!global.hivPrevalence) {
-					global.hivPrevalence = { minYear:10000, maxYear:0, minValue:10000000000, maxValue:0 };
+				if (!global[prop]) {
+					global[prop] = { minYear:10000, maxYear:0, minValue:10000000000, maxValue:0 };
+				}
+				if (!global.time) {
+					global.time = { minYear:10000, maxYear:0 };
 				}
 				
 				var region = country.region;
-				if (!region.hivPrevalence) {
-					region.hivPrevalence = { minYear:10000, maxYear:0, minValue:10000000000, maxValue:0 };
+				if (!region[prop]) {
+					region[prop] = { minYear:10000, maxYear:0, minValue:10000000000, maxValue:0 };
 				}
+				if (!region.time) {
+					region.time = { minYear:10000, maxYear:0 };
+				}				
 				
 				for (var j = 0; j < column.length; j++)
 				{
@@ -265,30 +252,50 @@ if(namespace.DataModel === undefined)
 						var year = parseInt(years[j]);
 						//console.log("HIV "+rowTitle+" : "+year+" : "+value);
 						
-						if (!country.hivPrevalence) {
-							country.hivPrevalence = {};
+						if (!country[prop]) {
+							country[prop] = {};
 						}
-						country.hivPrevalence[year] = value;
+						country[prop][year] = value;
+						
+						if (!country.time) {
+							country.time = { minYear:10000, maxYear:0 };
+						}
 						
 						// set region bounds
-						this._setBounds(region.hivPrevalence, year, value, country);
+						this._setBounds(region[prop], year, value, country);
 						// set global bounds
-						this._setBounds(global.hivPrevalence, year, value, country);
+						this._setBounds(global[prop], year, value, country);
+						
+						//set time max/min bounds for all country data
+						this._setYearBounds(country.time, year);
+						//set time max/min bounds for all region data
+						this._setYearBounds(region.time, year);
+						//set time max/min bounds for all global data
+						this._setYearBounds(global.time, year);
 					}
 				}
 			} else {
-				console.log("Entry for \""+rowTitle+"\" in Pop.csv but not in HIV.csv");
+				console.log("Entry for \""+rowTitle+"\" in Pop.csv but not in XXX.csv");
 			}
-		}		
+		}
 	}
 	
 	p._setBounds = function _setBounds(obj, year, value, country)
 	{
+		obj = this._setYearBounds(obj, year);
+		obj = this._setValueBounds( obj, year, value, country );
+	}
+	p._setYearBounds = function _setYearBounds(obj, year)
+	{
 		if ( year > obj.maxYear )
 			obj.maxYear = year;
 		if ( year < obj.minYear )
-			obj.minYear = year;						
-		
+			obj.minYear = year;
+			
+		return obj;
+	}
+	p._setValueBounds = function _setValueBounds( obj, year, value, country )
+	{
 		if ( value > obj.maxValue )
 		{
 			obj.maxValue = value;
@@ -301,6 +308,8 @@ if(namespace.DataModel === undefined)
 			obj.minValueCountry = country;
 			obj.minValueYear = year;
 		}
+		
+		return obj;
 	}
 	
 	p.getData = function getData()

@@ -28,7 +28,7 @@
 		};
 
 		
-		p.mapToAxis = function mapToAxis( minVal, maxVal, numSteps )
+		p.mapToAxis = function mapToAxis( minVal, maxVal, numSteps, forceInt )
 		{
 			var diff = maxVal - minVal;
 			var stepSize = diff / numSteps;
@@ -42,6 +42,7 @@
 			
 			// round to a neat number for mapping to the axis
 			if (stepSciNot < 0.1 )			stepSciNot = 0.1;
+			//else if (stepSciNot < 0.125 )	stepSciNot = 0.125;
 			else if (stepSciNot < 0.15 )	stepSciNot = 0.15;
 			else if (stepSciNot < 0.2 )		stepSciNot = 0.2;
 			else if (stepSciNot < 0.5 )		stepSciNot = 0.5;
@@ -54,8 +55,11 @@
 			
 			stepSize = stepSciNot;
 			
+			if (forceInt)	stepSize = Math.ceil(stepSize);
+			
 			var graphMinVal = 0;
 			// minVal must not be zero
+			//TODO: Need to dynamically find the start position, i.e. the step below the min val.
 			if ( stepSize * numSteps < maxVal ) 
 			{
 				graphMinVal = Math.floor(minVal);

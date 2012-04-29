@@ -29,6 +29,7 @@ if(namespace.GraphView === undefined)
 		this._graphUtils = GraphUtils.create();
 		
 		this._offsetTop = 600;
+		//this._offsetLeft = window.innerWidth;
 		
 		this._container = document.createElement( 'div' );
 		document.body.appendChild( this._container );
@@ -36,13 +37,14 @@ if(namespace.GraphView === undefined)
 		var distance = 2000;
 		this._camera = new THREE.CombinedCamera( window.innerWidth /2, window.innerHeight/2, 70, 1, distance, -distance, distance, distance );
 		
-		this._camera.position.x = 0//200;
+		//this._camera.position.x = this._offsetLeft;
 		this._camera.position.y = this._offsetTop;
 		this._camera.position.z = 0//200;
 
 		this._scene = new THREE.Scene();
 
 		this._scene.add( this._camera );
+		//this._scene.position.x = this._offsetLeft;
 		this._scene.position.y = this._offsetTop;
 
 		
@@ -187,55 +189,160 @@ if(namespace.GraphView === undefined)
 	{
 		this._toFixedView();
 		this._camera.toTopView();
+		//this._camera.position.x = this._offsetLeft;
 		this._camera.position.z = -this._offsetTop;
+		
+		this._xAxisToTopView();
+		this._yAxisToDefaultView();
+		this._zAxisToDefaultView();
+		
+		if (this._xAxisObj) this._scene.add(this._xAxisObj);
+		if (this._yAxisObj) this._scene.remove(this._yAxisObj);
+		if (this._zAxisObj) this._scene.add(this._zAxisObj);
 	}
 	p.toRightView = function toRightView()
 	{
 		this._toFixedView();
 		this._camera.toRightView();
+		//this._camera.position.x = this._offsetLeft;
 		this._camera.position.y = this._offsetTop;
+		
+		this._xAxisToDefaultView();
+		this._yAxisToRightView();
+		this._zAxisToRightView();
+		
+		if (this._xAxisObj) this._scene.remove(this._xAxisObj);
+		if (this._yAxisObj) this._scene.add(this._yAxisObj);
+		if (this._zAxisObj) this._scene.add(this._zAxisObj);
 	}
 	p.toFrontView = function toFrontView()
 	{
 		this._toFixedView();
 		this._camera.toFrontView();
+		//this._camera.position.x = this._offsetLeft;
 		this._camera.position.y = this._offsetTop;
+		
+		this._xAxisToDefaultView();
+		this._yAxisToDefaultView();
+		this._zAxisToDefaultView();
+		
+		if (this._xAxisObj) this._scene.add(this._xAxisObj);
+		if (this._yAxisObj) this._scene.add(this._yAxisObj);
+		if (this._zAxisObj) this._scene.remove(this._zAxisObj);
 	}
 	p.toOverView = function toOverView()
 	{
 		this._toDynamicView();
 		this._camera.rotationAutoUpdate = true;
-		//this._camera.position.y = this._offsetTop;
+		
+		this._xAxisToDefaultView();
+		this._yAxisToDefaultView();
+		this._zAxisToDefaultView();
+		
+		if (this._xAxisObj) this._scene.add(this._xAxisObj);
+		if (this._yAxisObj) this._scene.add(this._yAxisObj);
+		if (this._zAxisObj) this._scene.add(this._zAxisObj);
 	}
+	
+	p._xAxisToTopView = function _xAxisToTopView()
+	{
+		if (!this._xAxisObj) return;
+		this._xAxisObj.rotation.x = Math.PI + Math.PI/2;
+	}
+	p._xAxisToDefaultView = function _xAxisToDefaultView()
+	{
+		if (!this._xAxisObj) return;
+		this._xAxisObj.rotation.x = 0;
+	}
+	
+	p._yAxisToRightView = function _yAxisToRightView()
+	{
+		if (!this._yAxisObj) return;
+		this._yAxisObj.rotation.y = Math.PI/2;
+	}
+	p._yAxisToDefaultView = function _yAxisToDefaultView()
+	{
+		if (!this._yAxisObj) return;
+		this._yAxisObj.rotation.y = 0;
+	}
+	
+	p._zAxisToRightView = function _zAxisToRightView()
+	{
+		if (!this._zAxisObj) return;
+		
+		var numSteps = this._zAxisValues.numSteps;
+		this._zAxisObj.rotation.z = Math.PI/2;
+		this._zAxisLinesObj.rotation.z = Math.PI/2;
+		
+		for ( var i = 0; i < this._zAxisObj.children.length; i ++ )
+		{
+			var zpos = -( i * (this._axisLength/numSteps) );
+			var text = this._zAxisObj.children[i];
+
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			text.position.x = rightOffset - 40;
+			text.position.z = zpos - 10;
+			text.rotation.x = Math.PI/2;
+			text.rotation.z = 0;
+		}
+		
+		text = this._zAxisTitle;
+		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+		text.position.x = -140;
+		text.position.z = -this._axisLength/2 - centreOffset;		
+		text.rotation.x = Math.PI/2;
+		text.rotation.z = Math.PI + Math.PI/2;
+	}
+	p._zAxisToDefaultView = function _zAxisToDefaultView()
+	{
+		if (!this._zAxisObj) return;
+		
+		var numSteps = this._zAxisValues.numSteps;
+		this._zAxisObj.rotation.z = 0;
+		this._zAxisLinesObj.rotation.z = 0;
+	
+		for ( var i = 0; i < this._zAxisObj.children.length; i ++ )
+		{
+			var zpos = -( i * (this._axisLength/numSteps) );
+			var text = this._zAxisObj.children[i];
+
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			text.position.x = rightOffset - 40;
+			text.position.y = 20;
+			text.position.z = zpos + 10;
+			text.rotation.x = -Math.PI/2;
+			text.rotation.z = 0;	
+		}
+		
+		text = this._zAxisTitle;
+		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+		text.position.x = -120;
+		text.position.z = -this._axisLength/2 - centreOffset;
+		text.rotation.x = -Math.PI/2;
+		text.rotation.z = Math.PI/2;
+	}	
 	
 	p.setFov = function setFov( fov )
 	{
 		this._camera.setFov( fov );
-
-		document.getElementById('fov').innerHTML = 'FOV '+ fov.toFixed(2) +'&deg;' ;
 	}
 
 	p.setLens = function setLens( lens ) 
 	{
 		// try adding a tween effect while changing focal length, and it'd be even cooler!
-
 		var fov = this._camera.setLens( lens );
-
-		document.getElementById('fov').innerHTML = 'Converted ' + lens + 'mm lens to FOV '+ fov.toFixed(2) +'&deg;' ;
 	}
 
 	p.setOrthographic = function setOrthographic() 
 	{
 		this._camera.toOrthographic();
-
-		document.getElementById('fov').innerHTML = 'Orthographic mode' ;
 	}
 
 	p.setPerspective = function setPerspective() 
 	{
 		this._camera.toPerspective();
-
-		document.getElementById('fov').innerHTML = 'Perspective mode' ;
 	}	
 	
 	p._animate = function _animate()
@@ -280,15 +387,15 @@ if(namespace.GraphView === undefined)
 		
 		this._dataProvider = data;
 		
-		var zMin = 1980;//data.time.minYear;
-		var zMax = data.time.maxYear;
+		var zMin = 1990;//data.time.minYear;
+		var zMax = 2010;//data.time.maxYear;
 		
 		// Compute X-Axis (GDP)
 		this._xAxisValues = this._graphUtils.mapToAxis(data.gdpPerCapita.minValue, data.gdpPerCapita.maxValue, numSteps);
 		// Compute Y-Axis (HIV)
-		this._yAxisValues = this._graphUtils.mapToAxis(data.hivPrevalence.minValue, data.hivPrevalence.maxValue, numSteps);
+		this._yAxisValues = this._graphUtils.mapToAxis(data.hivPrevalence.minValue, data.hivPrevalence.maxValue, numSteps, true);
 		// Compute Z-Axis (Time)
-		this._zAxisValues = this._graphUtils.mapToAxis(zMin, zMax, numSteps);
+		this._zAxisValues = this._graphUtils.mapToAxis(zMin, zMax, numSteps, true);
 		
 		this._renderAxes();
 		this._renderGrid();
@@ -376,7 +483,6 @@ if(namespace.GraphView === undefined)
 			var gdp = yearsObj[year].gdpPerCapita;
 			var hiv = yearsObj[year].hivPrevalence;
 			//console.log(year+" = "+value);
-			
 					
 			if (!gdp) 	gdp = prevGDPValue;
 			else		prevGDPValue = gdp;
@@ -433,24 +539,37 @@ if(namespace.GraphView === undefined)
 		var axisNum = this._xAxisValues.minVal;
 		var numSteps = this._xAxisValues.numSteps;
 		
+		this._xAxisObj = new THREE.Object3D();
+		this._scene.add( this._xAxisObj );
+		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
 			var xpos = ( i * (this._axisLength/numSteps) );
 		
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.x = xpos;
-			this._scene.add( line );
+			this._xAxisObj.add( line );
 			
 			
 			var text = this._createText(axisNum.toString());
 			text.position.x = xpos - 10;
-			text.position.y -= 50;
+			text.position.y = -50;
 			text.rotation.z = Math.PI + Math.PI/2;
 			
+			this._xAxisObj.add( text );
+			
 			axisNum += this._xAxisValues.stepSize;
-
 		}
+		
+		var title = "GDP Per Capita (2005 Int $)";
+		var text = this._createText(title, 20);
+		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+		text.position.x = centreOffset + this._axisLength/2;
+		text.position.y = -160;
+		
+		this._xAxisObj.add( text );
 	}
+	
 	p._renderYAxis = function _renderYAxis()
 	{
 		// draw Y-Axis lines
@@ -461,22 +580,36 @@ if(namespace.GraphView === undefined)
 		var axisNum = this._yAxisValues.minVal;
 		var numSteps = this._yAxisValues.numSteps;
 		
+		this._yAxisObj = new THREE.Object3D();
+		this._scene.add( this._yAxisObj );
+		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
 			var ypos = ( i * (this._axisLength/numSteps) );
 		
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.y = ypos;
-			this._scene.add( line );
-			
+			this._yAxisObj.add( line );
 			
 			var text = this._createText(axisNum.toString());
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			text.position.x = rightOffset - 40;
 			text.position.y = ypos - 10;
-			text.position.x -= 40;
+			
+			this._yAxisObj.add( text );
 			
 			axisNum += this._yAxisValues.stepSize;
 
 		}
+		
+		var yTitle = "Estimated HIV Prevalence % (Ages 15-49)";
+		var text = this._createText(yTitle, 20);
+		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+		text.position.x = -120;
+		text.position.y = centreOffset + this._axisLength/2;
+		text.rotation.z = Math.PI/2;
+		
+		this._yAxisObj.add( text );
 	}
 	p._renderZAxis = function _renderZAxis()
 	{
@@ -488,23 +621,44 @@ if(namespace.GraphView === undefined)
 		var axisNum = this._zAxisValues.minVal;
 		var numSteps = this._zAxisValues.numSteps;
 		
+		this._zAxisObj = new THREE.Object3D();
+		this._scene.add( this._zAxisObj );
+		
+		this._zAxisLinesObj = new THREE.Object3D();
+		this._scene.add( this._zAxisLinesObj );
+		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
 			var zpos = -( i * (this._axisLength/numSteps) );
 		
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.z = zpos;
-			this._scene.add( line );
-			
+			//this._scene.add( line );
+			this._zAxisLinesObj.add( line );
 			
 			var text = this._createText(axisNum.toString());
+			
+			//TODO: seperate into own function?
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			text.position.x = rightOffset - 40;
+			text.position.y = 20;
 			text.position.z = zpos + 10;
-			text.position.x -= 40;
 			text.rotation.x = -Math.PI/2;
-			//text.rotation.z = Math.PI + Math.PI/2;
+			this._zAxisObj.add( text );
 			
 			axisNum += this._zAxisValues.stepSize;
-		}	
+		}
+		
+		var title = "Time";
+		var text = this._createText(title, 20);
+		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+		text.position.x = -120;
+		text.position.z = -this._axisLength/2 - centreOffset;
+		text.rotation.x = -Math.PI/2;
+		text.rotation.z = Math.PI/2;
+		this._zAxisTitle = text;
+		this._zAxisObj.add( text );
 	}
 	
 	p._renderAxes = function _renderAxes()
@@ -545,7 +699,7 @@ if(namespace.GraphView === undefined)
 		}
 	}
 	
-	p._createText = function _createText(str)
+	p._createText = function _createText(str, size)
 	{
 		// Get text from hash
 		var hash = document.location.hash.substr( 1 );
@@ -555,36 +709,29 @@ if(namespace.GraphView === undefined)
 			str = hash;
 
 		}
+		
+		if (!size)	size = 16;
 
-		var text3d = new THREE.TextGeometry( str, {
+		var geometry = new THREE.TextGeometry( str, {
 
-			size: 16,
+			size: size,
 			height: 1,
 			curveSegments: 2,
 			font: "helvetiker"
 
 		});
 
-		text3d.computeBoundingBox();
-		var centerOffset = -0.5 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
-		var rightOffset = -1 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
+		geometry.computeBoundingBox();
+		var centerOffset = -0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
+		var rightOffset = -1 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
 		
 		var textMaterial = new THREE.MeshBasicMaterial( { color:  0x000000, overdraw: true } );
-		var text = new THREE.Mesh( text3d, textMaterial );
+		var text = new THREE.Mesh( geometry, textMaterial );
 
 		text.doubleSided = false;
 
 		var parent = new THREE.Object3D();
 		parent.add( text );
-
-		parent.position.x = rightOffset;
-		parent.position.y = 20;
-		parent.position.z = 0;
-
-		parent.rotation.x = 0;
-		parent.rotation.y = Math.PI * 2;		
-		
-		this._scene.add( parent );
 		
 		return parent;
 	}

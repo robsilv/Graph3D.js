@@ -132,7 +132,7 @@ if(namespace.DataModel === undefined)
 		// store column titles
 		for (var i = 0; i < column.length; i ++) 
 		{
-			this._global.regions.push({region:column[i], countries:[]});        
+			this._global.regions.push({name:column[i], countries:[]});        
 		}
 
 		// loop through all rows

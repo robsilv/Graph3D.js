@@ -56,15 +56,30 @@
 			
 			var graphMinVal = 0;
 			// minVal must not be zero
-			if ( stepSize * numSteps < maxVal ) {
+			if ( stepSize * numSteps < maxVal ) 
+			{
 				graphMinVal = Math.floor(minVal);
 				//console.log("MIN VAL NOT ZERO "+minVal);
 			}
 			
-			console.log("minVal "+minVal+" maxVal "+maxVal+" numSteps "+numSteps+" stepSize "+stepSize);
+			var finalMaxVal	= minVal + (stepSize * numSteps);
+			var maxNumSteps = numSteps;
+			for ( var i = 0; i < numSteps; i ++ )
+			{
+				var stepVal = graphMinVal + (stepSize * i);
+				
+				if (stepVal >= maxVal ) {
+					maxNumSteps = i;
+					finalMaxVal = stepVal;
+					console.log("maxStep "+stepVal+" finalMaxVal "+finalMaxVal+" i "+i);
+					break;
+				}
+			}
+			
+			console.log("minVal "+minVal+" maxVal "+maxVal+" numSteps "+maxNumSteps+" stepSize "+stepSize);
 			
 			
-			return { minVal: graphMinVal, maxVal: minVal + (stepSize * numSteps), stepSize:stepSize, numSteps:numSteps }; 
+			return { minVal: graphMinVal, maxVal:finalMaxVal , stepSize:stepSize, numSteps:maxNumSteps }; 
 		}
 	}
 })();

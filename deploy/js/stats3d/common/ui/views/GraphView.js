@@ -47,29 +47,6 @@ if(namespace.GraphView === undefined)
 
 		
 		this._axisLength = 1000;
-		
-		// Grid
-
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0, 0 ) );
-
-		var numSteps = 20;
-		var stepSize = this._axisLength / numSteps;
-		
-		for ( var i = 0; i <= numSteps; i ++ ) {
-
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.z = ( i * stepSize ) - this._axisLength;
-			this._scene.add( line );
-
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.x = ( i * stepSize );
-			line.position.z = 0;//-this._axisLength;
-			line.rotation.y = 90 * Math.PI / 180;
-			this._scene.add( line );
-
-		}
 
 		// X-AXIS (red)
 		var geometry = new THREE.Geometry();
@@ -303,32 +280,53 @@ if(namespace.GraphView === undefined)
 		
 		this._dataProvider = data;
 		
+		var zMin = 1980;//data.time.minYear;
+		var zMax = data.time.maxYear;
+		
 		// Compute X-Axis (GDP)
 		this._xAxisValues = this._graphUtils.mapToAxis(data.gdpPerCapita.minValue, data.gdpPerCapita.maxValue, numSteps);
 		// Compute Y-Axis (HIV)
 		this._yAxisValues = this._graphUtils.mapToAxis(data.hivPrevalence.minValue, data.hivPrevalence.maxValue, numSteps);
 		// Compute Z-Axis (Time)
-		this._zAxisValues = this._graphUtils.mapToAxis(data.time.minYear, data.time.maxYear, numSteps);
+		this._zAxisValues = this._graphUtils.mapToAxis(zMin, zMax, numSteps);
 		
 		this._renderAxes();
+		this._renderGrid();
 		
 		// draw line for country
 		//this._plotData(data.countries["Lesotho"]);
-		
-		for ( var country in data.countries ) 
+		var regionColors = [0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0x00FFFF, 0xFF00FF];
+		for ( var i = 0; i < data.regions.length; i ++ )
 		{
-			this._plotData(data.countries[country]);
+			var region = data.regions[i];
+			var color = new THREE.Color();
+			//color.setHSV(Math.random(), 1.0, 1.0);
+			color.setHex(regionColors[i]);
+			region.color = color;
 		}
-
+		
+		for ( var countryName in data.countries ) 
+		{
+			var country = data.countries[countryName];
+			color = country.region.color;
+			//var color = new THREE.Color();
+			//color.setHSV(Math.random(), 1.0, 1.0);
+			this._plotLine(country, color);
+		}
+		
 		//console.log("Z (Time) axis minVal "+this._zAxisValues.minVal+" maxVal "+this._zAxisValues.maxVal);
 	}
 	
-	p._plotData = function _plotData(country)
-	{		
+	p._plotLine = function _plotLine(country, color)
+	{
+		var minYear = this._zAxisValues.minVal;
+		
 		// massage data
 		var yearsObj = {};
 		for ( var year in country.gdpPerCapita )
 		{
+			if ( year < minYear ) continue;
+			
 			var value = country.gdpPerCapita[year];
 			
 			if (!yearsObj[year]) {
@@ -340,6 +338,8 @@ if(namespace.GraphView === undefined)
 		
 		for ( var year in country.hivPrevalence )
 		{
+			if ( year < minYear ) continue;
+			
 			var value = country.hivPrevalence[year];
 			if (!yearsObj[year]) {
 				yearsObj[year] = {};
@@ -348,9 +348,9 @@ if(namespace.GraphView === undefined)
 			yearsObj[year].hivPrevalence = value;
 		}
 		
+		
+		
 		var colors = [];
-		var color = new THREE.Color();
-		color.setHSV(Math.random(), 1.0, 1.0);
 		
 		//init Particles
 		var lineGeom = new THREE.Geometry();
@@ -359,7 +359,8 @@ if(namespace.GraphView === undefined)
 		
 		var sprite = THREE.ImageUtils.loadTexture("../files/img/particle2.png");
 		material = new THREE.ParticleBasicMaterial({
-			size: 20,
+			size: 5,
+			sizeAttenuation: false,
 			map: sprite,
 			//blending: THREE.AdditiveBlending,
 			depthTest: false,
@@ -418,12 +419,11 @@ if(namespace.GraphView === undefined)
 		this._scene.add(particles);		
 		
 		// lines
-
 		var line = new THREE.Line( lineGeom, new THREE.LineBasicMaterial( { color: color.getHex(), opacity: 0.5 } ) );
 		this._scene.add( line );
 	}
 	
-	p._renderAxes = function _renderAxes()
+	p._renderXAxis = function _renderXAxis()
 	{
 		// draw X-Axis lines
 		var geometry = new THREE.Geometry();
@@ -450,7 +450,9 @@ if(namespace.GraphView === undefined)
 			axisNum += this._xAxisValues.stepSize;
 
 		}
-		
+	}
+	p._renderYAxis = function _renderYAxis()
+	{
 		// draw Y-Axis lines
 		var geometry = new THREE.Geometry();
 		geometry.vertices.push( new THREE.Vector3( -20, 0, 0 ) );
@@ -475,7 +477,9 @@ if(namespace.GraphView === undefined)
 			axisNum += this._yAxisValues.stepSize;
 
 		}
-		
+	}
+	p._renderZAxis = function _renderZAxis()
+	{
 		// draw Z-Axis lines
 		var geometry = new THREE.Geometry();
 		geometry.vertices.push( new THREE.Vector3( -20, 0, 0 ) );
@@ -501,6 +505,44 @@ if(namespace.GraphView === undefined)
 			
 			axisNum += this._zAxisValues.stepSize;
 		}	
+	}
+	
+	p._renderAxes = function _renderAxes()
+	{
+		this._renderXAxis();
+		this._renderYAxis();
+		this._renderZAxis();
+	}
+	
+	p._renderGrid = function _renderGrid()
+	{
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0, 0 ) );
+
+		var numSteps = this._xAxisValues.numSteps;
+		var stepSize = this._axisLength / numSteps;
+		
+		// Render X lines
+		for ( var i = 0; i <= numSteps; i ++ ) 
+		{
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position.x = ( i * stepSize );
+			line.position.z = 0;//-this._axisLength;
+			line.rotation.y = 90 * Math.PI / 180;
+			this._scene.add( line );
+		}		
+		
+		var numSteps = this._zAxisValues.numSteps;
+		var stepSize = this._axisLength / numSteps;		
+		
+		// Render Z lines
+		for ( var i = 0; i <= numSteps; i ++ ) {
+
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position.z = ( i * stepSize ) - this._axisLength;
+			this._scene.add( line );
+		}
 	}
 	
 	p._createText = function _createText(str)

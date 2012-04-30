@@ -3,7 +3,7 @@ robots.txt
 deploy/js/libs/three.js/LICENSE
 deploy/js/libs/three.js/README.md
 deploy/js/libs/three.js/.gitignore
-deploy/js/libs/three.js/build
+deploy/js/libs/three.js/build/custom
 deploy/js/libs/three.js/docs
 deploy/js/libs/three.js/examples
 deploy/js/libs/three.js/gui
@@ -11,7 +11,6 @@ deploy/js/libs/three.js/src
 deploy/js/libs/three.js/utils
 deploy/js/libs/tween.js/LICENSE
 deploy/js/libs/tween.js/README.md
-deploy/js/libs/tween.js/build
 deploy/js/libs/tween.js/examples
 deploy/js/libs/tween.js/src
 deploy/js/libs/tween.js/utils

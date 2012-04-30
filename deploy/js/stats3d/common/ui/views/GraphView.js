@@ -28,27 +28,43 @@ if(namespace.GraphView === undefined)
 		this.dataProvider = null;
 		this._graphUtils = GraphUtils.create();
 		
-		this._offsetTop = 600;
-		//this._offsetLeft = window.innerWidth;
+		this._offsetTop = 0;//window.innerHeight/4*3;
+		this._offsetLeft = 0;//window.innerWidth;
 		
 		this._container = document.createElement( 'div' );
 		document.body.appendChild( this._container );
-
-		var distance = 2000;
+		
+		//this._cameraLookAt = new THREE.Vector3(500, 300, -500);
+		this._cameraLookAt = new THREE.Vector3(0, 0, 0);
+		
+		var distance = 2500;
 		this._camera = new THREE.CombinedCamera( window.innerWidth /2, window.innerHeight/2, 70, 1, distance, -distance, distance, distance );
 		
+		//var w = window.innerWidth / 2;
+		//var h = window.innerHeight / 2;
+		//this._camera = new THREE.OrthographicCamera( w / - 2, w / 2, h / 2, h / - 2, distance, distance );
+		
 		//this._camera.position.x = this._offsetLeft;
-		this._camera.position.y = this._offsetTop;
-		this._camera.position.z = 0//200;
+		//this._camera.position.x = 2000;//this._offsetLeft;
+		//this._camera.position.y = 0;//this._offsetTop;
+		//this._camera.position.z = 0;//200;
 
 		this._scene = new THREE.Scene();
 
 		this._scene.add( this._camera );
 		//this._scene.position.x = this._offsetLeft;
-		this._scene.position.y = this._offsetTop;
+		//this._scene.position.y = this._offsetTop;
 
-		
 		this._axisLength = 1000;
+		
+		this._graphObjContainer = new THREE.Object3D();
+		this._scene.add(this._graphObjContainer);
+		this._graphObj = new THREE.Object3D();
+		this._graphObjContainer.add(this._graphObj);
+		this._graphObj.position.x = -this._axisLength /2;
+		this._graphObj.position.y = -this._axisLength /2;
+		this._graphObj.position.z = this._axisLength /2;
+	
 
 		// X-AXIS (red)
 		var geometry = new THREE.Geometry();
@@ -56,7 +72,7 @@ if(namespace.GraphView === undefined)
 		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0, 0 ) );
 
 		var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xff0000, opacity: 0.5 } ) );
-		this._scene.add( line );
+		this._graphObj.add( line );
 	
 		// Y-AXIS (green)
 		var geometry = new THREE.Geometry();
@@ -64,7 +80,7 @@ if(namespace.GraphView === undefined)
 		geometry.vertices.push( new THREE.Vector3( 0, this._axisLength, 0 ) );
 
 		var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x00ff00, opacity: 0.5 } ) );
-		this._scene.add( line );
+		this._graphObj.add( line );
 		
 		// Z-AXIS (blue)
 		var geometry = new THREE.Geometry();
@@ -72,7 +88,7 @@ if(namespace.GraphView === undefined)
 		geometry.vertices.push( new THREE.Vector3( 0, 0, -this._axisLength ) );
 
 		var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x0000ff, opacity: 0.5 } ) );
-		this._scene.add( line );			
+		this._graphObj.add( line );			
 		
 
 		// Lights
@@ -142,7 +158,7 @@ if(namespace.GraphView === undefined)
 		this.setOrthographic();
 		this.setLens(12);
 		this.toOverView();
-		this._camera.setZoom(2);
+		this._camera.setZoom(2.5);
 		
 		this._topViewButton = document.getElementById("topView");
 		this._rightViewButton = document.getElementById("rightView");
@@ -175,60 +191,70 @@ if(namespace.GraphView === undefined)
 		this._rotating = false;
 		this._camera.position.x = 0;
 		this._camera.position.y = 0;
-		this._camera.position.z = 0;		
+		this._camera.position.z = 0;
+		
+		this._graphObjContainer.rotation.x = 0;
+		this._graphObjContainer.rotation.y = 0;
+		this._graphObjContainer.rotation.z = 0;
 	}
 	p._toDynamicView = function _toDynamicView()
 	{
 		this._rotating = true;
-		this._camera.position.x = 200;
-		this._camera.position.y = 100;
-		this._camera.position.z = 200;	
+		this._camera.position.x = 1000;//200;
+		this._camera.position.y = 100;//100;
+		this._camera.position.z = 200;//200;
+		
+		this._camera.lookAt(this._cameraLookAt);
+		
+		this._graphObjContainer.rotation.x = 0;
+		this._graphObjContainer.rotation.y = 0;
+		this._graphObjContainer.rotation.z = 0;
 	}
 	
 	p.toTopView = function toTopView()
 	{
 		this._toFixedView();
 		this._camera.toTopView();
-		//this._camera.position.x = this._offsetLeft;
+		this._camera.position.x = this._offsetLeft;
 		this._camera.position.z = -this._offsetTop;
 		
 		this._xAxisToTopView();
 		this._yAxisToDefaultView();
 		this._zAxisToDefaultView();
 		
-		if (this._xAxisObj) this._scene.add(this._xAxisObj);
-		if (this._yAxisObj) this._scene.remove(this._yAxisObj);
-		if (this._zAxisObj) this._scene.add(this._zAxisObj);
+		if (this._xAxisObj) this._graphObj.add(this._xAxisObj);
+		if (this._yAxisObj) this._graphObj.remove(this._yAxisObj);
+		if (this._zAxisObj) this._graphObj.add(this._zAxisObj);
 	}
 	p.toRightView = function toRightView()
 	{
 		this._toFixedView();
 		this._camera.toRightView();
-		//this._camera.position.x = this._offsetLeft;
+		this._camera.position.z = -this._offsetLeft;
 		this._camera.position.y = this._offsetTop;
 		
 		this._xAxisToDefaultView();
 		this._yAxisToRightView();
 		this._zAxisToRightView();
 		
-		if (this._xAxisObj) this._scene.remove(this._xAxisObj);
-		if (this._yAxisObj) this._scene.add(this._yAxisObj);
-		if (this._zAxisObj) this._scene.add(this._zAxisObj);
+		if (this._xAxisObj) this._graphObj.remove(this._xAxisObj);
+		if (this._yAxisObj) this._graphObj.add(this._yAxisObj);
+		if (this._zAxisObj) this._graphObj.add(this._zAxisObj);
 	}
 	p.toFrontView = function toFrontView()
 	{
 		this._toFixedView();
 		this._camera.toFrontView();
-		//this._camera.position.x = this._offsetLeft;
+		this._camera.position.x = this._offsetLeft;
 		this._camera.position.y = this._offsetTop;
 		
 		this._xAxisToDefaultView();
 		this._yAxisToDefaultView();
 		this._zAxisToDefaultView();
 		
-		if (this._xAxisObj) this._scene.add(this._xAxisObj);
-		if (this._yAxisObj) this._scene.add(this._yAxisObj);
-		if (this._zAxisObj) this._scene.remove(this._zAxisObj);
+		if (this._xAxisObj) this._graphObj.add(this._xAxisObj);
+		if (this._yAxisObj) this._graphObj.add(this._yAxisObj);
+		if (this._zAxisObj) this._graphObj.remove(this._zAxisObj);
 	}
 	p.toOverView = function toOverView()
 	{
@@ -239,9 +265,9 @@ if(namespace.GraphView === undefined)
 		this._yAxisToDefaultView();
 		this._zAxisToDefaultView();
 		
-		if (this._xAxisObj) this._scene.add(this._xAxisObj);
-		if (this._yAxisObj) this._scene.add(this._yAxisObj);
-		if (this._zAxisObj) this._scene.add(this._zAxisObj);
+		if (this._xAxisObj) this._graphObj.add(this._xAxisObj);
+		if (this._yAxisObj) this._graphObj.add(this._yAxisObj);
+		if (this._zAxisObj) this._graphObj.add(this._zAxisObj);
 	}
 	
 	p._xAxisToTopView = function _xAxisToTopView()
@@ -368,14 +394,25 @@ if(namespace.GraphView === undefined)
 	
 		if ( this._rotating )
 		{
-			var multiplier = 0.1;//05;
-			var xInc = ( this._mouseX - this._camera.position.x ) * multiplier;
-			var yInc = ( - this._mouseY + this._offsetTop - this._camera.position.y ) * multiplier;
+			var multiplier = 0.05;
 			
-			if (xInc) this._camera.position.x += xInc;
-			if (yInc) this._camera.position.y += yInc;
+			var xInc = ( this._axisLength + this._mouseX - this._camera.position.x ) * multiplier;
+			//var yInc = ( - this._mouseY + this._offsetTop - this._camera.position.y ) * multiplier;
+			var yInc = ( this._axisLength/4*3 - this._mouseY - this._camera.position.y ) * multiplier;
 			
-			this._camera.lookAt( this._scene.position );
+			//if (xInc) this._camera.position.x += xInc;
+			//if (yInc) this._camera.position.y += yInc;
+			
+			//mouseX = event.touches[ 0 ].pageX - windowHalfX;
+			var targetRotationOnMouseDown = 0;
+			var mouseXOnMouseDown = 0;
+			this._targetRotation = targetRotationOnMouseDown + ( this._mouseX - mouseXOnMouseDown ) * 0.05;
+			
+			//this._graphObj.rotation.y += ( this._targetRotation - this._graphObj.rotation.y ) * 0.05;
+			
+			this._graphObjContainer.rotation.y += 0.01;
+			
+			this._camera.lookAt( this._cameraLookAt );
 		}
 	
 		this._renderer.render( this._scene, this._camera );
@@ -522,11 +559,11 @@ if(namespace.GraphView === undefined)
 		//init particle system
 		var particles = new THREE.ParticleSystem(geometry, material);
 		particles.sortParticles = false;
-		this._scene.add(particles);		
+		this._graphObj.add(particles);		
 		
 		// lines
 		var line = new THREE.Line( lineGeom, new THREE.LineBasicMaterial( { color: color.getHex(), opacity: 0.5 } ) );
-		this._scene.add( line );
+		this._graphObj.add( line );
 	}
 	
 	p._renderXAxis = function _renderXAxis()
@@ -540,7 +577,7 @@ if(namespace.GraphView === undefined)
 		var numSteps = this._xAxisValues.numSteps;
 		
 		this._xAxisObj = new THREE.Object3D();
-		this._scene.add( this._xAxisObj );
+		this._graphObj.add( this._xAxisObj );
 		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
@@ -581,7 +618,7 @@ if(namespace.GraphView === undefined)
 		var numSteps = this._yAxisValues.numSteps;
 		
 		this._yAxisObj = new THREE.Object3D();
-		this._scene.add( this._yAxisObj );
+		this._graphObj.add( this._yAxisObj );
 		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
@@ -622,10 +659,10 @@ if(namespace.GraphView === undefined)
 		var numSteps = this._zAxisValues.numSteps;
 		
 		this._zAxisObj = new THREE.Object3D();
-		this._scene.add( this._zAxisObj );
+		this._graphObj.add( this._zAxisObj );
 		
 		this._zAxisLinesObj = new THREE.Object3D();
-		this._scene.add( this._zAxisLinesObj );
+		this._graphObj.add( this._zAxisLinesObj );
 		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
@@ -684,7 +721,7 @@ if(namespace.GraphView === undefined)
 			line.position.x = ( i * stepSize );
 			line.position.z = 0;//-this._axisLength;
 			line.rotation.y = 90 * Math.PI / 180;
-			this._scene.add( line );
+			this._graphObj.add( line );
 		}		
 		
 		var numSteps = this._zAxisValues.numSteps;
@@ -695,7 +732,7 @@ if(namespace.GraphView === undefined)
 
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.z = ( i * stepSize ) - this._axisLength;
-			this._scene.add( line );
+			this._graphObj.add( line );
 		}
 	}
 	

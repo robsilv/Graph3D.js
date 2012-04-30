@@ -1,2 +1,2 @@
-Stats3D.js
+Graph3D.js
 ==========

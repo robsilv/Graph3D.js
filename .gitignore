@@ -9,4 +9,10 @@ deploy/js/libs/three.js/examples
 deploy/js/libs/three.js/gui
 deploy/js/libs/three.js/src
 deploy/js/libs/three.js/utils
+deploy/js/libs/tween.js/LICENSE
+deploy/js/libs/tween.js/README.md
+deploy/js/libs/tween.js/build
+deploy/js/libs/tween.js/examples
+deploy/js/libs/tween.js/src
+deploy/js/libs/tween.js/utils
 deploy/examples/nebula_source

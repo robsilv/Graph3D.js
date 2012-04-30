@@ -32,6 +32,15 @@ if(namespace.GraphView === undefined)
 		this._container = document.createElement( 'div' );
 		document.body.appendChild( this._container );
 		
+		var info = document.createElement( 'div' );
+		info.style.position = 'absolute';
+		info.style.top = '40px';
+		info.style.width = '100%';
+		info.style.textAlign = 'center';
+		info.innerHTML = 'Drag to spin the graph';
+		this._container.appendChild( info );
+		
+		
 		//this._cameraLookAt = new THREE.Vector3(500, 300, -500);
 		this._cameraLookAt = new THREE.Vector3(0, 0, 0);
 		this._fixedCameraPos = new THREE.Vector3(0, 0, 0);

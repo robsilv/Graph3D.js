@@ -330,160 +330,6 @@ if(namespace.GraphView === undefined)
 		if (this._zAxisTextObj) this._graphObj.add(this._zAxisTextObj);
 	}
 	
-	p._xAxisToBottomView = function _xAxisToBottomView()
-	{
-		if (!this._xAxisTextObj) return;
-		
-		//this._xAxisObj.rotation.x = Math.PI + Math.PI/2;
-		
-		var numSteps = this._xAxisValues.numSteps;
-		this._xAxisTextObj.rotation.x =  Math.PI + Math.PI/2;
-		this._xAxisLinesObj.rotation.x = Math.PI + Math.PI/2;
-		
-		for ( var i = 0; i < this._xAxisTextObj.children.length; i ++ )
-		{
-			var xpos = -( i * (this._axisLength/numSteps) );
-			var text = this._xAxisTextObj.children[i];
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			text.position.y = rightOffset - 40;
-			text.rotation.x = Math.PI;
-		}
-		
-		text = this._xAxisTitle;
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		text.position.y = centreOffset;
-	}
-	p._xAxisToDefaultView = function _xAxisToDefaultView()
-	{
-		if (!this._xAxisTextObj) return;
-		
-		var numSteps = this._xAxisValues.numSteps;
-		this._xAxisTextObj.rotation.x = 0;
-		this._xAxisLinesObj.rotation.x = 0;
-		
-		for ( var i = 0; i < this._xAxisTextObj.children.length; i ++ )
-		{
-			var xpos = -( i * (this._axisLength/numSteps) );
-			var text = this._xAxisTextObj.children[i];
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			text.position.y = -50;
-			text.rotation.x = 0;
-			text.rotation.z = Math.PI + Math.PI/2;
-		}
-		
-		//text.position.x = xpos - 10;
-		
-		
-		text = this._xAxisTitle;
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		text.position.x = centreOffset + this._axisLength/2;
-		text.position.y = -160;
-		text.rotation.z = 0;
-	}
-	
-	p._yAxisToRightView = function _yAxisToRightView()
-	{
-		if (!this._yAxisTextObj) return;
-		
-		this._yAxisTextObj.rotation.y = Math.PI/2;
-		this._yAxisLinesObj.rotation.y = Math.PI/2;
-	}
-	p._yAxisToDefaultView = function _yAxisToDefaultView()
-	{
-		if (!this._yAxisTextObj) return;
-		
-		this._yAxisTextObj.rotation.y = 0;
-		this._yAxisLinesObj.rotation.y = 0;
-	}
-	
-	p._zAxisToRightView = function _zAxisToRightView()
-	{
-		if (!this._zAxisTextObj) return;
-		
-		var numSteps = this._zAxisValues.numSteps;
-		this._zAxisTextObj.rotation.z = Math.PI/2;
-		this._zAxisLinesObj.rotation.z = Math.PI/2;
-		
-		for ( var i = 0; i < this._zAxisTextObj.children.length; i ++ )
-		{
-			var zpos = -( i * (this._axisLength/numSteps) );
-			var text = this._zAxisTextObj.children[i];
-
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			text.position.x = rightOffset - 40;
-			text.position.z = zpos - 10;
-			text.rotation.x = Math.PI/2;
-			text.rotation.z = 0;
-		}
-		
-		text = this._zAxisTitle;
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		text.position.x = -140;
-		text.position.z = -this._axisLength/2 - centreOffset;		
-		text.rotation.x = Math.PI/2;
-		text.rotation.z = Math.PI + Math.PI/2;
-	}
-	p._zAxisToBottomView = function _zAxisToBottomView()
-	{
-		if (!this._zAxisTextObj) return;
-		
-		var numSteps = this._zAxisValues.numSteps;
-		this._zAxisTextObj.rotation.z = 0;
-		this._zAxisLinesObj.rotation.z = 0;
-		
-		for ( var i = 0; i < this._zAxisTextObj.children.length; i ++ )
-		{
-			var zpos = -( i * (this._axisLength/numSteps) );
-			var text = this._zAxisTextObj.children[i];
-
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			text.position.x = rightOffset - 40;
-			text.position.z = zpos - 10;
-			text.rotation.x = Math.PI/2;
-			text.rotation.z = 0;
-		}
-		
-		text = this._zAxisTitle;
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		text.position.x = -140;
-		text.position.z = -this._axisLength/2 - centreOffset;		
-		text.rotation.x = Math.PI/2;
-		text.rotation.z = Math.PI + Math.PI/2;
-	}	
-	p._zAxisToDefaultView = function _zAxisToDefaultView()
-	{
-		if (!this._zAxisTextObj) return;
-		
-		var numSteps = this._zAxisValues.numSteps;
-		this._zAxisTextObj.rotation.z = 0;
-		this._zAxisLinesObj.rotation.z = 0;
-	
-		for ( var i = 0; i < this._zAxisTextObj.children.length; i ++ )
-		{
-			var zpos = -( i * (this._axisLength/numSteps) );
-			var text = this._zAxisTextObj.children[i];
-
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			text.position.x = rightOffset - 40;
-			text.position.y = 20;
-			text.position.z = zpos + 10;
-			text.rotation.x = -Math.PI/2;
-			text.rotation.z = 0;	
-		}
-		
-		text = this._zAxisTitle;
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		text.position.x = -120;
-		text.position.z = -this._axisLength/2 - centreOffset;
-		text.rotation.x = -Math.PI/2;
-		text.rotation.z = Math.PI/2;
-	}	
-	
 	p.setFov = function setFov( fov )
 	{
 		this._camera.setFov( fov );
@@ -678,6 +524,14 @@ if(namespace.GraphView === undefined)
 		this._graphObj.add( line );
 	}
 	
+	// RENDER AXES =================================
+	p._renderAxes = function _renderAxes()
+	{
+		this._renderXAxis();
+		this._renderYAxis();
+		this._renderZAxis();
+	}	
+	
 	p._renderXAxis = function _renderXAxis()
 	{
 		// draw X-Axis lines
@@ -694,9 +548,6 @@ if(namespace.GraphView === undefined)
 		this._xAxisLinesObj = new THREE.Object3D();
 		this._graphObj.add( this._xAxisLinesObj );		
 		
-		//this._xAxisObj = new THREE.Object3D();
-		//this._graphObj.add( this._xAxisObj );
-		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
 			var xpos = ( i * (this._axisLength/numSteps) );
@@ -705,11 +556,8 @@ if(namespace.GraphView === undefined)
 			line.position.x = xpos;
 			this._xAxisLinesObj.add( line );
 			
-			
 			var text = this._createText(axisNum.toString());
 			text.position.x = xpos - 10;
-			text.position.y = -50;
-			text.rotation.z = Math.PI + Math.PI/2;
 			
 			this._xAxisTextObj.add( text );
 			
@@ -718,13 +566,59 @@ if(namespace.GraphView === undefined)
 		
 		var title = "GDP Per Capita (2005 Int $)";
 		var text = this._createText(title, 20);
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		text.position.x = centreOffset + this._axisLength/2;
-		text.position.y = -160;
 		this._xAxisTitle = text;
 		// adding the title to the textObj means I'll need to translate.. Should probably be nested in a parent xAxisObj
 		this._xAxisTextObj.add( text );
+		
+		this._xAxisToDefaultView();
 	}
+	p._xAxisToDefaultView = function _xAxisToDefaultView()
+	{
+		if (!this._xAxisTextObj) return;
+		
+		var numSteps = this._xAxisValues.numSteps;
+		this._xAxisTextObj.rotation.x = 0;
+		this._xAxisLinesObj.rotation.x = 0;
+		
+		for ( var i = 0; i < this._xAxisTextObj.children.length; i ++ )
+		{
+			var xpos = -( i * (this._axisLength/numSteps) );
+			var text = this._xAxisTextObj.children[i];
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			text.position.y = -50;
+			text.rotation.x = 0;
+			text.rotation.z = Math.PI + Math.PI/2;
+		}
+		
+		text = this._xAxisTitle;
+		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+		text.position.x = centreOffset + this._axisLength/2;
+		text.position.y = -160;
+		text.rotation.z = 0;
+	}
+	p._xAxisToBottomView = function _xAxisToBottomView()
+	{
+		if (!this._xAxisTextObj) return;
+		
+		var numSteps = this._xAxisValues.numSteps;
+		this._xAxisTextObj.rotation.x =  Math.PI + Math.PI/2;
+		this._xAxisLinesObj.rotation.x = Math.PI + Math.PI/2;
+		
+		for ( var i = 0; i < this._xAxisTextObj.children.length; i ++ )
+		{
+			var xpos = -( i * (this._axisLength/numSteps) );
+			var text = this._xAxisTextObj.children[i];
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			text.position.y = rightOffset - 40;
+			text.rotation.x = Math.PI;
+		}
+		
+		text = this._xAxisTitle;
+		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+		text.position.y = centreOffset;
+	}		
 	
 	p._renderYAxis = function _renderYAxis()
 	{
@@ -748,28 +642,52 @@ if(namespace.GraphView === undefined)
 		
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.y = ypos;
-			this._yAxisLinesObj.add( line );
 			
-			var text = this._createText(axisNum.toString());
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			text.position.x = rightOffset - 40;
-			text.position.y = ypos - 10;
-			
+			var text = this._createText(axisNum.toString());			
 			this._yAxisTextObj.add( text );
 			
 			axisNum += this._yAxisValues.stepSize;
-
 		}
 		
 		var yTitle = "Estimated HIV Prevalence % (Ages 15-49)";
 		var text = this._createText(yTitle, 20);
+		this._yAxisTitle = text;
+		this._yAxisTextObj.add( text );	//TODO: not sure about this...
+		
+		this._yAxisToDefaultView();
+	}
+	p._yAxisToDefaultView = function _yAxisToDefaultView()
+	{
+		if (!this._yAxisTextObj) return;
+		
+		var numSteps = this._yAxisValues.numSteps;
+		this._yAxisTextObj.rotation.y = 0;
+		this._yAxisLinesObj.rotation.y = 0;
+		
+		for ( var i = 0; i < this._yAxisTextObj.children.length; i ++ )
+		{
+			var ypos = ( i * (this._axisLength/numSteps) );
+		
+			var text = this._yAxisTextObj.children[i];		
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			text.position.x = rightOffset - 40;
+			text.position.y = ypos - 10;
+		}
+		
+		text = this._yAxisTitle;
 		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 		text.position.x = -120;
 		text.position.y = centreOffset + this._axisLength/2;
 		text.rotation.z = Math.PI/2;
-		//TODO: not sure about this...
-		this._yAxisTextObj.add( text );
 	}
+	p._yAxisToRightView = function _yAxisToRightView()
+	{
+		if (!this._yAxisTextObj) return;
+		
+		this._yAxisTextObj.rotation.y = Math.PI/2;
+		this._yAxisLinesObj.rotation.y = Math.PI/2;
+	}	
+	
 	p._renderZAxis = function _renderZAxis()
 	{
 		// draw Z-Axis lines
@@ -792,18 +710,9 @@ if(namespace.GraphView === undefined)
 		
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.z = zpos;
-			//this._scene.add( line );
 			this._zAxisLinesObj.add( line );
 			
 			var text = this._createText(axisNum.toString());
-			
-			//TODO: seperate into own function?
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			text.position.x = rightOffset - 40;
-			text.position.y = 20;
-			text.position.z = zpos + 10;
-			text.rotation.x = -Math.PI/2;
 			this._zAxisTextObj.add( text );
 			
 			axisNum += this._zAxisValues.stepSize;
@@ -811,22 +720,98 @@ if(namespace.GraphView === undefined)
 		
 		var title = "Time";
 		var text = this._createText(title, 20);
+		this._zAxisTitle = text;
+		this._zAxisTextObj.add( text );
+		
+		this._zAxisToDefaultView();
+	}
+	p._zAxisToDefaultView = function _zAxisToDefaultView()
+	{
+		if (!this._zAxisTextObj) return;
+		
+		var numSteps = this._zAxisValues.numSteps;
+		this._zAxisTextObj.rotation.z = 0;
+		this._zAxisLinesObj.rotation.z = 0;
+	
+		for ( var i = 0; i < this._zAxisTextObj.children.length; i ++ )
+		{
+			var zpos = -( i * (this._axisLength/numSteps) );
+			var text = this._zAxisTextObj.children[i];
+
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			text.position.x = rightOffset - 40;
+			text.position.y = 20;
+			text.position.z = zpos + 10;
+			text.rotation.x = -Math.PI/2;
+			text.rotation.z = 0;	
+		}
+		
+		text = this._zAxisTitle;
 		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 		text.position.x = -120;
 		text.position.z = -this._axisLength/2 - centreOffset;
 		text.rotation.x = -Math.PI/2;
 		text.rotation.z = Math.PI/2;
-		this._zAxisTitle = text;
-		this._zAxisTextObj.add( text );
 	}
-	
-	p._renderAxes = function _renderAxes()
+	p._zAxisToRightView = function _zAxisToRightView()
 	{
-		this._renderXAxis();
-		this._renderYAxis();
-		this._renderZAxis();
+		if (!this._zAxisTextObj) return;
+		
+		var numSteps = this._zAxisValues.numSteps;
+		this._zAxisTextObj.rotation.z = Math.PI/2;
+		this._zAxisLinesObj.rotation.z = Math.PI/2;
+		
+		for ( var i = 0; i < this._zAxisTextObj.children.length; i ++ )
+		{
+			var zpos = -( i * (this._axisLength/numSteps) );
+			var text = this._zAxisTextObj.children[i];
+
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			text.position.x = rightOffset - 40;
+			text.position.z = zpos - 10;
+			text.rotation.x = Math.PI/2;
+			text.rotation.z = 0;
+		}
+		
+		text = this._zAxisTitle;
+		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+		text.position.x = -140;
+		text.position.z = -this._axisLength/2 - centreOffset;		
+		text.rotation.x = Math.PI/2;
+		text.rotation.z = Math.PI + Math.PI/2;
 	}
+	p._zAxisToBottomView = function _zAxisToBottomView()
+	{
+		if (!this._zAxisTextObj) return;
+		
+		var numSteps = this._zAxisValues.numSteps;
+		this._zAxisTextObj.rotation.z = 0;
+		this._zAxisLinesObj.rotation.z = 0;
+		
+		for ( var i = 0; i < this._zAxisTextObj.children.length; i ++ )
+		{
+			var zpos = -( i * (this._axisLength/numSteps) );
+			var text = this._zAxisTextObj.children[i];
+
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			text.position.x = rightOffset - 40;
+			text.position.z = zpos - 10;
+			text.rotation.x = Math.PI/2;
+			text.rotation.z = 0;
+		}
+		
+		text = this._zAxisTitle;
+		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+		text.position.x = -140;
+		text.position.z = -this._axisLength/2 - centreOffset;		
+		text.rotation.x = Math.PI/2;
+		text.rotation.z = Math.PI + Math.PI/2;
+	}	
 	
+	// RENDER GRIDS =========================================
 	p._renderGridXY = function _renderGridXY()
 	{
 		var geometry = new THREE.Geometry();
@@ -929,6 +914,8 @@ if(namespace.GraphView === undefined)
 			this._graphObj.add( line );
 		}
 	}
+	
+	// CREATE TEXT =================================
 	
 	p._createText = function _createText(str, size)
 	{

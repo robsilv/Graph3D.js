@@ -545,7 +545,9 @@ if(namespace.GraphView === undefined)
 		
 		// RENDER
 		this._renderAxes();
+		this._renderGridXY();
 		this._renderGridXZ();
+		this._renderGridYZ();
 		
 		// draw line for country
 		//this._plotData(data.countries["Lesotho"]);
@@ -825,29 +827,101 @@ if(namespace.GraphView === undefined)
 		this._renderZAxis();
 	}
 	
-	p._renderGridXZ = function _renderGridXZ()
+	p._renderGridXY = function _renderGridXY()
 	{
 		var geometry = new THREE.Geometry();
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0, 0 ) );
-
+		geometry.vertices.push( new THREE.Vector3( 0, this._axisLength, 0 ) );
+		
 		var numSteps = this._xAxisValues.numSteps;
 		var stepSize = this._axisLength / numSteps;
 		
-		// Render X lines
+		// Render X lines (Up)
 		for ( var i = 0; i <= numSteps; i ++ ) 
 		{
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.x = ( i * stepSize );
-			line.position.z = 0;//-this._axisLength;
-			line.rotation.y = 90 * Math.PI / 180;
+			line.position.z = -this._axisLength;
+			this._graphObj.add( line );
+		}
+		
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0,  0 ) );
+		
+		var numSteps = this._yAxisValues.numSteps;
+		var stepSize = this._axisLength / numSteps;	
+		
+		// Render Y lines (Across)
+		for ( var i = 0; i <= numSteps; i ++ ) 
+		{
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position.y = ( i * stepSize );
+			line.position.z = -this._axisLength;
+			this._graphObj.add( line );
+		}
+	}
+	
+	p._renderGridYZ = function _renderGridYZ()
+	{
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( 0, 0, this._axisLength ) );
+		
+		var numSteps = this._yAxisValues.numSteps;
+		var stepSize = this._axisLength / numSteps;
+		
+		// Render Y lines (Across)
+		for ( var i = 0; i <= numSteps; i ++ ) 
+		{
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position.y = ( i * stepSize );
+			line.position.z = -this._axisLength;
+			this._graphObj.add( line );
+		}
+		
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( 0, this._axisLength, 0 ) );
+		
+		var numSteps = this._zAxisValues.numSteps;
+		var stepSize = this._axisLength / numSteps;	
+		
+		// Render Z lines (Up)
+		for ( var i = 0; i <= numSteps; i ++ ) 
+		{
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position.z = ( i * stepSize ) -this._axisLength;
+			this._graphObj.add( line );
+		}
+	}
+	
+	p._renderGridXZ = function _renderGridXZ()
+	{
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( 0, 0, this._axisLength ) );
+
+		var numSteps = this._xAxisValues.numSteps;
+		var stepSize = this._axisLength / numSteps;
+		
+		// Render X lines (Front/Back)
+		for ( var i = 0; i <= numSteps; i ++ ) 
+		{
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position.x = ( i * stepSize );
+			line.position.z = -this._axisLength;
 			this._graphObj.add( line );
 		}		
+		
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0, 0 ) );
 		
 		var numSteps = this._zAxisValues.numSteps;
 		var stepSize = this._axisLength / numSteps;		
 		
-		// Render Z lines
+		// Render Z lines (Left/Right)
 		for ( var i = 0; i <= numSteps; i ++ ) {
 
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );

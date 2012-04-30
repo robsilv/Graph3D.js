@@ -2,14 +2,21 @@
 
 var namespace = STATS3D.namespace("STATS3D.common.ui.views");
 var GraphUtils = STATS3D.namespace("STATS3D.common.data").GraphUtils;
+var ListenerFunctions = STATS3D.namespace("STATS3D.utils.events").ListenerFunctions;
 //var EventDispatcher = STATS3D.namespace("STATS3D.utils.events").EventDispatcher;
 
 if(namespace.GraphView === undefined) 
-{
+{	
 	var GraphView = function GraphView() {
 		this._init();
 		this._animate();
 	};
+	
+	// constants
+	GraphView.BOTTOM = "bottom";
+	GraphView.RIGHT = "right";
+	GraphView.FRONT = "front";
+	GraphView.OVER = "over";
 	
 	namespace.GraphView = GraphView;
 		
@@ -28,6 +35,7 @@ if(namespace.GraphView === undefined)
 		
 		this._offsetTop = 0;//window.innerHeight/4*3;
 		this._offsetLeft = 0;//window.innerWidth;
+		this._animLength = 1800;
 		
 		this._container = document.createElement( 'div' );
 		document.body.appendChild( this._container );
@@ -43,7 +51,7 @@ if(namespace.GraphView === undefined)
 		
 		//this._cameraLookAt = new THREE.Vector3(500, 300, -500);
 		this._cameraLookAt = new THREE.Vector3(0, 0, 0);
-		this._fixedCameraPos = new THREE.Vector3(0, 0, 0);
+		//this._fixedCameraPos = new THREE.Vector3(0, 0, 0);
 		this._dynamicCameraPos = new THREE.Vector3(200, 100, 200);
 		
 		var distance = 2500;
@@ -144,7 +152,6 @@ if(namespace.GraphView === undefined)
 	{
 		this.setOrthographic();
 		this.setLens(12);
-		this.toOverView();
 		this._camera.setZoom(2.5);
 		
 		this._bottomViewButton = document.getElementById("bottomView");
@@ -171,9 +178,15 @@ if(namespace.GraphView === undefined)
 		this._mouseY = 0;
 		this._mouseYOnMouseDown = 0;
 		
+		//this._animationValues = {"lineEnvelope": 0, "contentEnvelope": 0};
+		this._updateTimeCallback = ListenerFunctions.createListenerFunction(this, this._updateTime);
+		this._completeTimeCallback = ListenerFunctions.createListenerFunction(this, this._completeTime);
+		
 		document.addEventListener( 'mousedown', function(event) { scope._onDocumentMouseDown(event); }, false );
 		document.addEventListener( 'touchstart', function(event) { scope._onDocumentTouchStart(event); }, false );
 		document.addEventListener( 'touchmove', function(event) { scope._onDocumentTouchMove(event); }, false );
+		
+		this.toOverView();
 		
 	};
 	
@@ -256,78 +269,174 @@ if(namespace.GraphView === undefined)
 	
 	p._toFixedView = function _toFixedView()
 	{
-		this._rotating = false;
-		this._camera.position = this._fixedCameraPos;
+		this._freeRotate = false;
+		//this._camera.position = this._fixedCameraPos;
 		
 		this._graphObjContainer.rotation = new THREE.Vector3(0,0,0);
 	}
 	p._toDynamicView = function _toDynamicView()
 	{
-		this._rotating = true;
-		this._camera.position = this._dynamicCameraPos;
+		//this._freeRotate = true;
+		//this._camera.position = this._dynamicCameraPos;
 		
 		this._camera.lookAt(this._cameraLookAt);
 		
 		this._graphObjContainer.rotation = new THREE.Vector3(0,0,0);
 	}
+	
 	p.toBottomView = function toBottomView()
 	{
+		var oldView = this._currentView;
+		this._currentView = GraphView.BOTTOM;
+	
 		this._toFixedView();
-		this._camera.toBottomView();
+		//this._camera.toBottomView();
+		/*
+		this._camera.rotation.x = Math.PI / 2;
+		this._camera.rotation.y = 0;
 		this._camera.rotation.z = - Math.PI / 2;
+		
 		this._camera.position.x = this._offsetLeft;
 		this._camera.position.z = -this._offsetTop;
+		*/
+		this._camera.rotationAutoUpdate = false;
+		
+		//this._animationValues = {camRX: Math.PI / 2, camRY: 0, camRZ: -Math.PI / 2, camPX: this._offsetLeft, camPY:0, camPZ:-this._offsetTop};
+		this._animationValues = {camRX: this._camera.rotation.x, camRY: this._camera.rotation.y, camRZ: this._camera.rotation.z, camPX: this._camera.position.x, camPY:this._camera.position.y, camPZ:this._camera.position.z};
+		
+		var camTween = new TWEEN.Tween(this._animationValues);
+		
+		if (oldView == GraphView.RIGHT) {
+			camTween.to({camRX: Math.PI / 2, camRY: 0, camRZ: -Math.PI / 2, camPX: this._offsetLeft, camPY:0, camPZ:-this._offsetTop}, this._animLength);
+		} else {
+			camTween.to({camRX: Math.PI / 2, camRY: 0, camRZ: -Math.PI / 2, camPX: this._offsetLeft, camPY:0, camPZ:-this._offsetTop}, this._animLength);
+		}
+		
+		camTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+		camTween.onUpdate(this._updateTimeCallback);
+		camTween.start();
 		
 		this._xAxisToBottomView();
 		this._yAxisToDefaultView();
 		this._zAxisToBottomView();
 		
-		if (this._xAxisTextObj) this._graphObj.add(this._xAxisTextObj);
-		if (this._yAxisTextObj) this._graphObj.remove(this._yAxisTextObj);
-		if (this._zAxisTextObj) this._graphObj.add(this._zAxisTextObj);
+		if (this._xAxisTextObj) 	this._graphObj.add(this._xAxisTextObj);
+		if (this._yAxisTextObj) 	this._graphObj.remove(this._yAxisTextObj);
+		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
 	}
+	
 	p.toRightView = function toRightView()
 	{
+		this._currentView = GraphView.RIGHT;
+		
 		this._toFixedView();
-		this._camera.toRightView();
-		this._camera.position.z = -this._offsetLeft;
+		/*
+		//this._camera.toRightView();
+		
+		this._camera.rotation.x = 0;
+		this._camera.rotation.y = Math.PI / 2;
+		this._camera.rotation.z = 0;
+		
 		this._camera.position.y = this._offsetTop;
+		this._camera.position.z = -this._offsetLeft;
+		*/
+		this._camera.rotationAutoUpdate = false;
+		
+		this._animationValues = {camRX: this._camera.rotation.x, camRY: this._camera.rotation.y, camRZ: this._camera.rotation.z, camPX: this._camera.position.x, camPY:this._camera.position.y, camPZ:this._camera.position.z};
+		
+		var camTween = new TWEEN.Tween(this._animationValues);
+		camTween.to({camRX: 0, camRY: Math.PI / 2, camRZ: 0, camPX: 0, camPY:this._offsetTop, camPZ:-this._offsetTop}, this._animLength);
+		camTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+		camTween.onUpdate(this._updateTimeCallback)
+		camTween.start();
 		
 		this._xAxisToDefaultView();
 		this._yAxisToRightView();
 		this._zAxisToRightView();
 		
-		if (this._xAxisTextObj) this._graphObj.remove(this._xAxisTextObj);
-		if (this._yAxisTextObj) this._graphObj.add(this._yAxisTextObj);
-		if (this._zAxisTextObj) this._graphObj.add(this._zAxisTextObj);
+		if (this._xAxisTextObj) 	this._graphObj.remove(this._xAxisTextObj);
+		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
+		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
 	}
+	
 	p.toFrontView = function toFrontView()
 	{
+		this._currentView = GraphView.FRONT;
+		
 		this._toFixedView();
-		this._camera.toFrontView();
+		/*
+		//this._camera.toFrontView();
+		
+		this.rotation.x = 0;
+		this.rotation.y = 0;
+		this.rotation.z = 0;
 		this._camera.position.x = this._offsetLeft;
 		this._camera.position.y = this._offsetTop;
+		*/
+		this._camera.rotationAutoUpdate = false;
+		
+		this._animationValues = {camRX: this._camera.rotation.x, camRY: this._camera.rotation.y, camRZ: this._camera.rotation.z, camPX: this._camera.position.x, camPY:this._camera.position.y, camPZ:this._camera.position.z};
+		
+		var camTween = new TWEEN.Tween(this._animationValues);
+		camTween.to({camRX: 0, camRY:0, camRZ: 0, camPX: this._offsetLeft, camPY:this._offsetTop, camPZ:0}, this._animLength);
+		camTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+		camTween.onUpdate(this._updateTimeCallback);
+		camTween.start();
 		
 		this._xAxisToDefaultView();
 		this._yAxisToDefaultView();
 		this._zAxisToDefaultView();
 		
-		if (this._xAxisTextObj) this._graphObj.add(this._xAxisTextObj);
-		if (this._yAxisTextObj) this._graphObj.add(this._yAxisTextObj);
-		if (this._zAxisTextObj) this._graphObj.remove(this._zAxisTextObj);
+		if (this._xAxisTextObj) 	this._graphObj.add(this._xAxisTextObj);
+		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
+		if (this._zAxisTextObj) 	this._graphObj.remove(this._zAxisTextObj);
 	}
+	
 	p.toOverView = function toOverView()
 	{
+		this._currentView = GraphView.OVER;
+		
 		this._toDynamicView();
-		this._camera.rotationAutoUpdate = true;
+		//this._camera.rotationAutoUpdate = true;
+		/*
+			this._camera.rotation.x = -Math.PI/12;
+			this._camera.rotation.y = Math.PI/4;
+			this._camera.rotation.z = Math.PI/16;		
+		*/
+		this._cameraDefaultRotation = new THREE.Vector3(-Math.PI/12, Math.PI/4, Math.PI/16);
+		this._camera.rotationAutoUpdate = false;
+	
+		this._animationValues = {camRX: this._camera.rotation.x, camRY: this._camera.rotation.y, camRZ: this._camera.rotation.z, camPX: this._camera.position.x, camPY:this._camera.position.y, camPZ:this._camera.position.z};
+		
+		var camTween = new TWEEN.Tween(this._animationValues);
+		camTween.to({camRX: this._cameraDefaultRotation.x, camRY: this._cameraDefaultRotation.y, camRZ: this._cameraDefaultRotation.z, camPX: 0, camPY:0, camPZ:0}, this._animLength);
+		camTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+		camTween.onUpdate(this._updateTimeCallback);
+		camTween.onComplete(this._completeTimeCallback);
+		camTween.start();
 		
 		this._xAxisToDefaultView();
 		this._yAxisToDefaultView();
 		this._zAxisToDefaultView();
 		
-		if (this._xAxisTextObj) this._graphObj.add(this._xAxisTextObj);
-		if (this._yAxisTextObj) this._graphObj.add(this._yAxisTextObj);
-		if (this._zAxisTextObj) this._graphObj.add(this._zAxisTextObj);
+		if (this._xAxisTextObj) 	this._graphObj.add(this._xAxisTextObj);
+		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
+		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
+	}
+	
+	p._updateTime = function _updateTime() 
+	{
+		this._camera.rotation.x = this._animationValues.camRX;
+		this._camera.rotation.y = this._animationValues.camRY;
+		this._camera.rotation.z = this._animationValues.camRZ;
+		
+		this._camera.position.x = this._animationValues.camPX;
+		this._camera.position.y = this._animationValues.camPY;
+		this._camera.position.z = this._animationValues.camPZ;
+	};
+	p._completeTime = function _completeTime()
+	{
+		//this._freeRotate = true;
 	}
 	
 	p.setFov = function setFov( fov )
@@ -362,7 +471,7 @@ if(namespace.GraphView === undefined)
 
 	p._render = function _render() 
 	{
-		if ( this._rotating )
+		if ( this._freeRotate )
 		{
 			//this._graphObjContainer.rotation.x += ( this._targetRotationX - this._graphObjContainer.rotation.x ) * 0.05;
 			this._graphObjContainer.rotation.y += ( this._targetRotationY - this._graphObjContainer.rotation.y ) * 0.05;
@@ -602,6 +711,7 @@ if(namespace.GraphView === undefined)
 		if (!this._xAxisTextObj) return;
 		
 		var numSteps = this._xAxisValues.numSteps;
+		
 		this._xAxisTextObj.rotation.x =  Math.PI + Math.PI/2;
 		this._xAxisLinesObj.rotation.x = Math.PI + Math.PI/2;
 		

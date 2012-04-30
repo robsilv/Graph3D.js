@@ -6,6 +6,7 @@
 	document.addEventListener("DOMContentLoaded", (function ()
 	{
 		console.log("DOMContentLoaded");
+		TWEEN.start();
 		
 		var graphView = GraphView.create();
 		var dataModel = DataModel.create();

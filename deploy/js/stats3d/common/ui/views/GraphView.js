@@ -23,8 +23,6 @@ if(namespace.GraphView === undefined)
 	
 	p._init = function _init()
 	{
-		//var container, stats;
-		//var camera, scene, renderer;
 		this.dataProvider = null;
 		this._graphUtils = GraphUtils.create();
 		
@@ -36,24 +34,15 @@ if(namespace.GraphView === undefined)
 		
 		//this._cameraLookAt = new THREE.Vector3(500, 300, -500);
 		this._cameraLookAt = new THREE.Vector3(0, 0, 0);
+		this._fixedCameraPos = new THREE.Vector3(0, 0, 0);
+		this._dynamicCameraPos = new THREE.Vector3(200, 100, 200);
 		
 		var distance = 2500;
 		this._camera = new THREE.CombinedCamera( window.innerWidth /2, window.innerHeight/2, 70, 1, distance, -distance, distance, distance );
-		
-		//var w = window.innerWidth / 2;
-		//var h = window.innerHeight / 2;
-		//this._camera = new THREE.OrthographicCamera( w / - 2, w / 2, h / 2, h / - 2, distance, distance );
-		
-		//this._camera.position.x = this._offsetLeft;
-		//this._camera.position.x = 2000;//this._offsetLeft;
-		//this._camera.position.y = 0;//this._offsetTop;
-		//this._camera.position.z = 0;//200;
 
 		this._scene = new THREE.Scene();
 
 		this._scene.add( this._camera );
-		//this._scene.position.x = this._offsetLeft;
-		//this._scene.position.y = this._offsetTop;
 
 		this._axisLength = 1000;
 		
@@ -65,7 +54,8 @@ if(namespace.GraphView === undefined)
 		this._graphObj.position.y = -this._axisLength /2;
 		this._graphObj.position.z = this._axisLength /2;
 	
-
+		// DRAW AXES
+		
 		// X-AXIS (red)
 		var geometry = new THREE.Geometry();
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
@@ -113,7 +103,6 @@ if(namespace.GraphView === undefined)
 		//this._renderer = new THREE.CanvasRenderer();
 		this._renderer = new THREE.WebGLRenderer({ antialias: true } );
 		this._renderer.setSize( window.innerWidth, window.innerHeight );
-		//this._renderer.setSize( "100%", "100%" );
 		
 		this._container.appendChild( this._renderer.domElement );
 
@@ -126,8 +115,6 @@ if(namespace.GraphView === undefined)
 		var scope = this;
 		window.addEventListener( 'resize', function() { scope._onWindowResize() }, false );
 		
-		document.addEventListener( 'mousemove', function(event) { scope._onDocumentMouseMove(event) }, false );
-		
 		this.enable();
 	}
 	
@@ -138,15 +125,6 @@ if(namespace.GraphView === undefined)
 
 		this._renderer.setSize( window.innerWidth, window.innerHeight );
 	}
-	
-	p._onDocumentMouseMove = function _onDocumentMouseMove( event ) 
-	{
-		var windowHalfX = window.innerWidth / 2;
-		var windowHalfY = window.innerHeight / 2;
-		
-		this._mouseX = ( event.clientX - windowHalfX );
-		this._mouseY = ( event.clientY - windowHalfY );
-	}	
 	
 	p.destroy = function destroy() 
 	{
@@ -172,15 +150,96 @@ if(namespace.GraphView === undefined)
 		this._frontViewButton.addEventListener( "click", function() { scope.toFrontView(); } );
 		this._overViewButton.addEventListener( "click", function() { scope.toOverView(); } );
 		
-		var windowHalfX = window.innerWidth / 2;
-		var windowHalfY = window.innerHeight / 2;
+		this._targetRotationY = 0;
+		this._targetRotationYOnMouseDown = 0;
+
+		this._mouseX = 0;
+		this._mouseXOnMouseDown = 0;
 		
-		//this._mouseX =  window.innerWidth / 4 * 3;
-		//this._mouseY =  0 - window.innerHeight;
-		//this._mouseX = 1000;
-		//this._mouseY = 1000;
+		this._targetRotationX = 0;
+		this._targetRotationXOnMouseDown = 0;
+
+		this._mouseY = 0;
+		this._mouseYOnMouseDown = 0;
+		
+		document.addEventListener( 'mousedown', function(event) { scope._onDocumentMouseDown(event); }, false );
+		document.addEventListener( 'touchstart', function(event) { scope._onDocumentTouchStart(event); }, false );
+		document.addEventListener( 'touchmove', function(event) { scope._onDocumentTouchMove(event); }, false );
 		
 	};
+	
+	p._onDocumentMouseDown = function _onDocumentMouseDown( event )
+	{
+		event.preventDefault();
+		
+		var scope = this;
+		
+		this._mouseMoveListener = function(event) { scope._onDocumentMouseMove(event) };
+		this._mouseUpListener = function(event) { scope._onDocumentMouseUp(event) };
+		this._mouseOutListener = function(event) { scope._onDocumentMouseOut(event) };
+
+		document.addEventListener( 'mousemove', this._mouseMoveListener, false );
+		document.addEventListener( 'mouseup', this._mouseUpListener, false );
+		document.addEventListener( 'mouseout', this._mouseDownListener, false );
+
+		this._mouseXOnMouseDown = event.clientX - window.innerWidth / 2;
+		this._targetRotationYOnMouseDown = this._targetRotationY;
+		
+		this._mouseYOnMouseDown = event.clientY - window.innerHeight / 2;
+		this._targetRotationXOnMouseDown = this._targetRotationX;
+	}
+
+	p._onDocumentMouseMove = function _onDocumentMouseMove( event )
+	{
+		this._mouseX = event.clientX - window.innerWidth / 2;
+		this._mouseY = event.clientY - window.innerHeight / 2;
+		
+		this._targetRotationX = this._targetRotationXOnMouseDown + ( this._mouseY - this._mouseYOnMouseDown ) * 0.005;
+		this._targetRotationY = this._targetRotationYOnMouseDown + ( this._mouseX - this._mouseXOnMouseDown ) * 0.005;
+	}
+
+	p._onDocumentMouseUp = function _onDocumentMouseUp( event ) {
+
+		document.removeEventListener( 'mousemove', this._mouseMoveListener, false );
+		document.removeEventListener( 'mouseup', this._mouseUpListener, false );
+		document.removeEventListener( 'mouseout', this._mouseOutListener, false );
+	}
+
+	p._onDocumentMouseOut = function _onDocumentMouseOut( event ) 
+	{
+		document.removeEventListener( 'mousemove', this._mouseMoveListener, false );
+		document.removeEventListener( 'mouseup', this._mouseUpListener, false );
+		document.removeEventListener( 'mouseout', this._mouseOutListener, false );
+	}
+
+	p._onDocumentTouchStart = function _onDocumentTouchStart( event ) 
+	{
+		if ( event.touches.length == 1 )
+		{
+			event.preventDefault();
+
+			this._mouseXOnMouseDown = event.touches[ 0 ].pageX - window.innerWidth / 2;
+			this._targetRotationYOnMouseDown = this._targetRotationY;
+			
+			this._mouseYOnMouseDown = event.touches[ 0 ].pageY - window.innerHeight / 2;
+			this._targetRotationXOnMouseDown = this._targetRotationX;
+		}
+	}
+
+	p._onDocumentTouchMove = function _onDocumentTouchMove( event ) 
+	{
+		if ( event.touches.length == 1 )
+		{
+			event.preventDefault();
+
+			this._mouseX = event.touches[ 0 ].pageX - window.innerWidth / 2;
+			this._targetRotationY = this._targetRotationYOnMouseDown + ( this._mouseX - this._mouseXOnMouseDown ) * 0.05;
+			
+			this._mouseY = event.touches[ 0 ].pageY - window.innerHeight / 2;
+			this._targetRotationX = this._targetRotationXOnMouseDown + ( this._mouseY - this._mouseYOnMouseDown ) * 0.05;
+		}
+	};	
+	
 	p.disable = function disable()
 	{
 
@@ -189,9 +248,7 @@ if(namespace.GraphView === undefined)
 	p._toFixedView = function _toFixedView()
 	{
 		this._rotating = false;
-		this._camera.position.x = 0;
-		this._camera.position.y = 0;
-		this._camera.position.z = 0;
+		this._camera.position = this._fixedCameraPos;
 		
 		this._graphObjContainer.rotation.x = 0;
 		this._graphObjContainer.rotation.y = 0;
@@ -200,9 +257,7 @@ if(namespace.GraphView === undefined)
 	p._toDynamicView = function _toDynamicView()
 	{
 		this._rotating = true;
-		this._camera.position.x = 1000;//200;
-		this._camera.position.y = 100;//100;
-		this._camera.position.z = 200;//200;
+		this._camera.position = this._dynamicCameraPos;
 		
 		this._camera.lookAt(this._cameraLookAt);
 		
@@ -382,36 +437,11 @@ if(namespace.GraphView === undefined)
 
 	p._render = function _render() 
 	{
-	/*
 		if ( this._rotating )
 		{
-			var timer = Date.now() * 0.0001;
-			this._camera.position.x = Math.cos( timer ) * 200;
-			this._camera.position.z = Math.sin( timer ) * 200;
-			this._camera.lookAt( this._scene.position );
-		}
-	*/
-	
-		if ( this._rotating )
-		{
-			var multiplier = 0.05;
-			
-			var xInc = ( this._axisLength + this._mouseX - this._camera.position.x ) * multiplier;
-			//var yInc = ( - this._mouseY + this._offsetTop - this._camera.position.y ) * multiplier;
-			var yInc = ( this._axisLength/4*3 - this._mouseY - this._camera.position.y ) * multiplier;
-			
-			//if (xInc) this._camera.position.x += xInc;
-			//if (yInc) this._camera.position.y += yInc;
-			
-			//mouseX = event.touches[ 0 ].pageX - windowHalfX;
-			var targetRotationOnMouseDown = 0;
-			var mouseXOnMouseDown = 0;
-			this._targetRotation = targetRotationOnMouseDown + ( this._mouseX - mouseXOnMouseDown ) * 0.05;
-			
-			//this._graphObj.rotation.y += ( this._targetRotation - this._graphObj.rotation.y ) * 0.05;
-			
-			this._graphObjContainer.rotation.y += 0.01;
-			
+			//this._graphObjContainer.rotation.x += ( this._targetRotationX - this._graphObjContainer.rotation.x ) * 0.05;
+			this._graphObjContainer.rotation.y += ( this._targetRotationY - this._graphObjContainer.rotation.y ) * 0.05;
+
 			this._camera.lookAt( this._cameraLookAt );
 		}
 	

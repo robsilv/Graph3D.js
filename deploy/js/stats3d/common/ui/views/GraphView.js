@@ -269,7 +269,7 @@ if(namespace.GraphView === undefined)
 		this._yAxisToDefaultView();
 		this._zAxisToBottomView();
 		
-		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.textContainer);
+		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
 		if (this._yAxisTextObj) 	this._graphObj.remove(this._yAxisTextObj);
 		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
 	}
@@ -293,7 +293,7 @@ if(namespace.GraphView === undefined)
 		this._yAxisToRightView();
 		this._zAxisToRightView();
 		
-		if (this._xAxisObjects) 	this._graphObj.remove(this._xAxisObjects.textContainer);
+		if (this._xAxisObjects) 	this._graphObj.remove(this._xAxisObjects.container);
 		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
 		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
 	}
@@ -318,7 +318,7 @@ if(namespace.GraphView === undefined)
 		this._yAxisToDefaultView();
 		this._zAxisToDefaultView();
 		
-		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.textContainer);
+		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
 		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
 		if (this._zAxisTextObj) 	this._graphObj.remove(this._zAxisTextObj);
 	}
@@ -342,7 +342,7 @@ if(namespace.GraphView === undefined)
 		this._yAxisToDefaultView();
 		this._zAxisToDefaultView();
 		
-		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.textContainer);
+		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
 		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
 		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
 	}
@@ -385,31 +385,25 @@ if(namespace.GraphView === undefined)
 		// Draw X-AXIS lines
 		if ( this._xAxisObjects.animationValues )
 		{
-			var lines = this._xAxisObjects.animationValues.lines;
-			if ( lines )
+			var markers = this._xAxisObjects.animationValues.markers;
+			if ( markers )
 			{
-				for ( var i = 0; i < lines.length; i ++ )
+				for ( var i = 0; i < markers.length; i ++ )
 				{
-					var len = lines[i].axisLength;
-					var rX = lines[i].rX;
-					var line = this._xAxisObjects.lines[i];
-					line.rotation.x = rX;
+					var len = markers[i].axisLength;
+					var rX = markers[i].rX;
+					var opacity = markers[i].opacity;
+					
+					var markerObj = this._xAxisObjects.markers[i];
+					markerObj.rotation.x = rX;
+					
+					var line = markerObj.children[0];
 					var vector3 = line.geometry.vertices[0];
 					vector3.y = len;
 					line.geometry.verticesNeedUpdate = true;
-				}
-			}
-			
-			var texts = this._xAxisObjects.animationValues.text;
-			if ( texts )
-			{
-				for ( var i = 0; i < texts.length; i ++ )
-				{
-					var opacity = texts[i].opacity;
-					var rX = texts[i].rX;
-					var text = this._xAxisObjects.text[i];
+					
+					var text = markerObj.children[1];
 					text.children[0].material.opacity = opacity;
-					text.rotation.x = rX;
 				}
 			}
 		}
@@ -666,15 +660,11 @@ if(namespace.GraphView === undefined)
 		var axisNum = this._xAxisValues.minVal;
 		var numSteps = this._xAxisValues.numSteps;
 
-		this._xAxisObjects = { lines: [], text: [], 
-							   animationValues: { lines: [], text: [] },
-							   textContainer: new THREE.Object3D(), 
-							   linesContainer: new THREE.Object3D() };
+		this._xAxisObjects = { lines: [], text: [], markers: [],
+							   animationValues: { lines: [], text: [], markers: [] },
+							   container: new THREE.Object3D() };
 
-		this._graphObj.add( this._xAxisObjects.textContainer );
-		
-		this._xAxisObjects.linesContainer = new THREE.Object3D();
-		this._graphObj.add( this._xAxisObjects.linesContainer );		
+		this._graphObj.add( this._xAxisObjects.container );	
 		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
@@ -684,10 +674,14 @@ if(namespace.GraphView === undefined)
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 		
+			var markerObj = new THREE.Object3D();
+			this._xAxisObjects.container.add( markerObj );
+			this._xAxisObjects.markers.push( markerObj );
+			
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 1 } ) );
 			line.position.x = xpos;
 			
-			this._xAxisObjects.linesContainer.add( line );
+			markerObj.add( line );
 			this._xAxisObjects.lines.push(line);
 			
 			var animVal = this._xAxisObjects.animationValues.lines[i];
@@ -695,32 +689,22 @@ if(namespace.GraphView === undefined)
 				animVal = this._xAxisObjects.animationValues.lines[i] = { rX:Math.PI/2, axisLength:0 };
 			}
 			
-			var animLength = 200;
-			var graphTween = new TWEEN.Tween(animVal);
-			//graphTween.to({axisLength: -20}, animLength);
-			graphTween.to({rX: 0, axisLength: -20}, animLength);
-			graphTween.delay(delay);
-			graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
-			graphTween.onUpdate(this._updateTimeCallback);
-			//graphTween.onComplete(this._completeTimeCallback);
-			graphTween.start();			
-			
-			delay += 0;
+			var animLength = 150;
 
 			var text = this._createText(axisNum.toString());
 			text.children[0].material.opacity = 0;
 			text.position.x = xpos - 10;
 			
-			this._xAxisObjects.textContainer.add( text );
+			markerObj.add( text );
 			this._xAxisObjects.text.push(text);
 			
-			animVal = this._xAxisObjects.animationValues.text[i];
+			animVal = this._xAxisObjects.animationValues.markers[i];
 			if (!animVal) {
-				animVal = this._xAxisObjects.animationValues.text[i] = { rX:Math.PI/2, opacity: 0 };
+				animVal = this._xAxisObjects.animationValues.markers[i] = { rX:Math.PI/2, opacity: 0, axisLength:0 };
 			}			
 			
 			graphTween = new TWEEN.Tween(animVal);
-			graphTween.to({rX: 0, opacity: 1}, animLength);
+			graphTween.to({rX: 0, opacity: 1, axisLength: -20}, animLength);
 			graphTween.delay(delay);
 			graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
 			graphTween.onUpdate(this._updateTimeCallback);
@@ -735,7 +719,7 @@ if(namespace.GraphView === undefined)
 		var text = this._createText(title, 20);
 		this._xAxisTitle = text;
 		// adding the title to the textObj means I'll need to translate.. Should probably be nested in a parent xAxisObj
-		//this._xAxisObjects.textContainer.add( text );
+		//this._xAxisObjects.container.add( text );
 		
 		this._xAxisToDefaultView();
 	}
@@ -744,13 +728,13 @@ if(namespace.GraphView === undefined)
 		if (!this._xAxisObjects) return;
 		
 		var numSteps = this._xAxisValues.numSteps;
-		this._xAxisObjects.textContainer.rotation.x = 0;
-		this._xAxisObjects.linesContainer.rotation.x = 0;
+		this._xAxisObjects.container.rotation.x = 0;
+		//this._xAxisObjects.linesContainer.rotation.x = 0;
 		
-		for ( var i = 0; i < this._xAxisObjects.textContainer.children.length; i ++ )
+		for ( var i = 0; i < this._xAxisObjects.container.children.length; i ++ )
 		{
 			var xpos = -( i * (this._axisLength/numSteps) );
-			var text = this._xAxisObjects.textContainer.children[i];
+			var text = this._xAxisObjects.container.children[i].children[1];
 			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 			
 			text.position.y = -50;
@@ -770,13 +754,13 @@ if(namespace.GraphView === undefined)
 		
 		var numSteps = this._xAxisValues.numSteps;
 		
-		this._xAxisObjects.textContainer.rotation.x =  Math.PI + Math.PI/2;
-		this._xAxisObjects.linesContainer.rotation.x = Math.PI + Math.PI/2;
+		this._xAxisObjects.container.rotation.x =  Math.PI + Math.PI/2;
+		//this._xAxisObjects.linesContainer.rotation.x = Math.PI + Math.PI/2;
 		
-		for ( var i = 0; i < this._xAxisObjects.textContainer.children.length; i ++ )
+		for ( var i = 0; i < this._xAxisObjects.container.children.length; i ++ )
 		{
 			var xpos = -( i * (this._axisLength/numSteps) );
-			var text = this._xAxisObjects.textContainer.children[i];
+			var text = this._xAxisObjects.container.children[i].children[1];
 			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 			
 			text.position.y = rightOffset - 40;

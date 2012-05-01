@@ -50,9 +50,9 @@ if(namespace.GraphView === undefined)
 		
 		
 		//this._cameraLookAt = new THREE.Vector3(500, 300, -500);
-		this._cameraLookAt = new THREE.Vector3(0, 0, 0);
+		//this._cameraLookAt = new THREE.Vector3(0, 0, 0);
 		//this._fixedCameraPos = new THREE.Vector3(0, 0, 0);
-		this._dynamicCameraPos = new THREE.Vector3(200, 100, 200);
+		//this._dynamicCameraPos = new THREE.Vector3(200, 100, 200);
 		
 		var distance = 2500;
 		this._camera = new THREE.CombinedCamera( window.innerWidth /2, window.innerHeight/2, 70, 1, distance, -distance, distance, distance );
@@ -70,32 +70,6 @@ if(namespace.GraphView === undefined)
 		this._graphObj.position.x = -this._axisLength /2;
 		this._graphObj.position.y = -this._axisLength /2;
 		this._graphObj.position.z = this._axisLength /2;
-	
-		// DRAW AXES
-		
-		// X-AXIS (red)
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0, 0 ) );
-
-		var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xff0000, opacity: 0.5 } ) );
-		this._graphObj.add( line );
-	
-		// Y-AXIS (green)
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( 0, this._axisLength, 0 ) );
-
-		var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x00ff00, opacity: 0.5 } ) );
-		this._graphObj.add( line );
-		
-		// Z-AXIS (blue)
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( 0, 0, -this._axisLength ) );
-
-		var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x0000ff, opacity: 0.5 } ) );
-		this._graphObj.add( line );			
 		
 
 		// Lights
@@ -295,7 +269,7 @@ if(namespace.GraphView === undefined)
 		this._yAxisToDefaultView();
 		this._zAxisToBottomView();
 		
-		if (this._xAxisTextObj) 	this._graphObj.add(this._xAxisTextObj);
+		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.textContainer);
 		if (this._yAxisTextObj) 	this._graphObj.remove(this._yAxisTextObj);
 		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
 	}
@@ -319,7 +293,7 @@ if(namespace.GraphView === undefined)
 		this._yAxisToRightView();
 		this._zAxisToRightView();
 		
-		if (this._xAxisTextObj) 	this._graphObj.remove(this._xAxisTextObj);
+		if (this._xAxisObjects) 	this._graphObj.remove(this._xAxisObjects.textContainer);
 		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
 		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
 	}
@@ -344,7 +318,7 @@ if(namespace.GraphView === undefined)
 		this._yAxisToDefaultView();
 		this._zAxisToDefaultView();
 		
-		if (this._xAxisTextObj) 	this._graphObj.add(this._xAxisTextObj);
+		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.textContainer);
 		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
 		if (this._zAxisTextObj) 	this._graphObj.remove(this._zAxisTextObj);
 	}
@@ -368,7 +342,7 @@ if(namespace.GraphView === undefined)
 		this._yAxisToDefaultView();
 		this._zAxisToDefaultView();
 		
-		if (this._xAxisTextObj) 	this._graphObj.add(this._xAxisTextObj);
+		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.textContainer);
 		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
 		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
 	}
@@ -388,6 +362,67 @@ if(namespace.GraphView === undefined)
 		this._graphObjContainer.rotation.z = this._graphValues.rZ;
 		
 		this._targetRotationY = this._graphObjContainer.rotation.y;
+		
+		// Extend X-AXIS
+		if (this._xAxisLine ) {//&& this._xAxisAnimValues) {
+			var vector3 = this._xAxisLine.geometry.vertices[1];
+			if (vector3) {
+				vector3.x = this._xAxisAnimValues.axisLength;
+				this._xAxisLine.geometry.verticesNeedUpdate = true;
+				//console.log(this._xAxisAnimValues.axisLength);
+			}
+		}
+		
+		// Extend Y-AXIS
+		if (this._yAxisLine ) {
+			var vector3 = this._yAxisLine.geometry.vertices[1];
+			if (vector3) {
+				vector3.y = this._yAxisAnimValues.axisLength;
+				this._yAxisLine.geometry.verticesNeedUpdate = true;
+			}
+		}
+		
+		// Extend Z-AXIS
+		if (this._zAxisLine ) {
+			var vector3 = this._zAxisLine.geometry.vertices[1];
+			if (vector3) {
+				vector3.z = this._zAxisAnimValues.axisLength;
+				this._zAxisLine.geometry.verticesNeedUpdate = true;
+			}
+		}
+		
+		// Draw X-AXIS lines
+		if ( this._xAxisObjects.animationValues )
+		{
+			var lines = this._xAxisObjects.animationValues.lines;
+			if ( lines )
+			{
+				for ( var i = 0; i < lines.length; i ++ )
+				{
+					var len = lines[i].axisLength;
+					var rX = lines[i].rX;
+					var line = this._xAxisObjects.lines[i];
+					line.rotation.x = rX;
+					var vector3 = line.geometry.vertices[0];
+					vector3.y = len;
+					line.geometry.verticesNeedUpdate = true;
+				}
+			}
+			
+			var texts = this._xAxisObjects.animationValues.text;
+			if ( texts )
+			{
+				for ( var i = 0; i < texts.length; i ++ )
+				{
+					var opacity = texts[i].opacity;
+					var rX = texts[i].rX;
+					var text = this._xAxisObjects.text[i];
+					text.children[0].material.opacity = opacity;
+					text.rotation.x = rX;
+				}
+			}
+		}
+		
 	};
 	p._completeTime = function _completeTime()
 	{
@@ -431,7 +466,7 @@ if(namespace.GraphView === undefined)
 			//this._graphObjContainer.rotation.x += ( this._targetRotationX - this._graphObjContainer.rotation.x ) * 0.05;
 			this._graphObjContainer.rotation.y += ( this._targetRotationY - this._graphObjContainer.rotation.y ) * 0.05;
 
-			this._camera.lookAt( this._cameraLookAt );
+			//this._camera.lookAt( this._cameraLookAt );
 		}
 	
 		this._renderer.render( this._scene, this._camera );
@@ -454,10 +489,12 @@ if(namespace.GraphView === undefined)
 		this._zAxisValues = this._graphUtils.mapToAxis(zMin, zMax, numSteps, true);
 		
 		// RENDER
+		
 		this._renderAxes();
-		this._renderGridXY();
-		this._renderGridXZ();
-		this._renderGridYZ();
+		//this._renderGridXY();
+		//this._renderGridXZ();
+		//this._renderGridYZ();
+		
 		
 		// draw line for country
 		//this._plotData(data.countries["Lesotho"]);
@@ -477,7 +514,7 @@ if(namespace.GraphView === undefined)
 			color = country.region.color;
 			//var color = new THREE.Color();
 			//color.setHSV(Math.random(), 1.0, 1.0);
-			this._plotLine(country, color);
+			//this._plotLine(country, color);
 		}
 		
 		//console.log("Z (Time) axis minVal "+this._zAxisValues.minVal+" maxVal "+this._zAxisValues.maxVal);
@@ -591,39 +628,111 @@ if(namespace.GraphView === undefined)
 	// RENDER AXES =================================
 	p._renderAxes = function _renderAxes()
 	{
-		this._renderXAxis();
-		this._renderYAxis();
-		this._renderZAxis();
+		// DRAW AXES
+		
+		var axisObjs = [{ lineName:"_xAxisLine", lineColor:0xff0000, valuesName:"_xAxisAnimValues", endValue:this._axisLength},
+						{ lineName:"_yAxisLine", lineColor:0x00ff00, valuesName:"_yAxisAnimValues", endValue:this._axisLength},
+						{ lineName:"_zAxisLine", lineColor:0x0000ff, valuesName:"_zAxisAnimValues", endValue:-this._axisLength}];
+		
+		var delay = 0;
+		
+		for ( var i = 0; i < 3; i ++ )
+		{
+			var axisObj = axisObjs[i];
+			var geometry = new THREE.Geometry();
+			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+
+			this[axisObj.lineName] = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: axisObj.lineColor, opacity: 0.5 } ) );
+			this._graphObj.add( this[axisObj.lineName] );
+			
+			this[axisObj.valuesName] = {axisLength:0};
+			
+			var graphTween = new TWEEN.Tween(this[axisObj.valuesName]);
+			graphTween.to({axisLength: axisObj.endValue}, this._animLength);
+			graphTween.delay(delay);
+			graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+			graphTween.onUpdate(this._updateTimeCallback);
+			//graphTween.onComplete(this._completeTimeCallback);
+			graphTween.start();
+			
+			delay += 500;		
+		}
+
+		this._renderXAxis(delay);
+		//this._renderYAxis();
+		//this._renderZAxis();
 	}	
 	
-	p._renderXAxis = function _renderXAxis()
+	p._renderXAxis = function _renderXAxis(delay)
 	{
-		// draw X-Axis lines
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( 0, -20, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		
+		// draw X-Axis lines		
 		var axisNum = this._xAxisValues.minVal;
 		var numSteps = this._xAxisValues.numSteps;
+
+		this._xAxisObjects = { lines: [], text: [], 
+							   animationValues: { lines: [], text: [] },
+							   textContainer: new THREE.Object3D(), 
+							   linesContainer: new THREE.Object3D() };
+
+		this._graphObj.add( this._xAxisObjects.textContainer );
 		
-		this._xAxisTextObj = new THREE.Object3D();
-		this._graphObj.add( this._xAxisTextObj );
+		this._xAxisObjects.linesContainer = new THREE.Object3D();
+		this._graphObj.add( this._xAxisObjects.linesContainer );
+
 		
-		this._xAxisLinesObj = new THREE.Object3D();
-		this._graphObj.add( this._xAxisLinesObj );		
 		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
 			var xpos = ( i * (this._axisLength/numSteps) );
-		
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.x = xpos;
-			this._xAxisLinesObj.add( line );
 			
+			var geometry = new THREE.Geometry();
+			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.5 } ) );
+			line.position.x = xpos;
+			
+			this._xAxisObjects.linesContainer.add( line );
+			this._xAxisObjects.lines.push(line);
+			
+			var animVal = this._xAxisObjects.animationValues.lines[i];
+			if (!animVal) {
+				animVal = this._xAxisObjects.animationValues.lines[i] = { rX:Math.PI/2, axisLength:0 };
+			}
+			
+			var animLength = 200;
+			var graphTween = new TWEEN.Tween(animVal);
+			//graphTween.to({axisLength: -20}, animLength);
+			graphTween.to({rX: 0, axisLength: -20}, animLength);
+			graphTween.delay(delay);
+			graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+			graphTween.onUpdate(this._updateTimeCallback);
+			//graphTween.onComplete(this._completeTimeCallback);
+			graphTween.start();			
+			
+			delay += 0;
+
 			var text = this._createText(axisNum.toString());
+			//text.children[0].material.opacity = 0.2;
 			text.position.x = xpos - 10;
 			
-			this._xAxisTextObj.add( text );
+			this._xAxisObjects.textContainer.add( text );
+			this._xAxisObjects.text.push(text);
+			
+			animVal = this._xAxisObjects.animationValues.text[i];
+			if (!animVal) {
+				animVal = this._xAxisObjects.animationValues.text[i] = { rX:Math.PI/2, opacity: 0 };
+			}			
+			
+			graphTween = new TWEEN.Tween(animVal);
+			graphTween.to({rX: 0, opacity: 1}, animLength);
+			graphTween.delay(delay);
+			graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+			graphTween.onUpdate(this._updateTimeCallback);
+			graphTween.start();		
+			
+			delay += 50;
 			
 			axisNum += this._xAxisValues.stepSize;
 		}
@@ -632,22 +741,22 @@ if(namespace.GraphView === undefined)
 		var text = this._createText(title, 20);
 		this._xAxisTitle = text;
 		// adding the title to the textObj means I'll need to translate.. Should probably be nested in a parent xAxisObj
-		this._xAxisTextObj.add( text );
+		//this._xAxisObjects.textContainer.add( text );
 		
 		this._xAxisToDefaultView();
 	}
 	p._xAxisToDefaultView = function _xAxisToDefaultView()
 	{
-		if (!this._xAxisTextObj) return;
+		if (!this._xAxisObjects) return;
 		
 		var numSteps = this._xAxisValues.numSteps;
-		this._xAxisTextObj.rotation.x = 0;
-		this._xAxisLinesObj.rotation.x = 0;
+		this._xAxisObjects.textContainer.rotation.x = 0;
+		this._xAxisObjects.linesContainer.rotation.x = 0;
 		
-		for ( var i = 0; i < this._xAxisTextObj.children.length; i ++ )
+		for ( var i = 0; i < this._xAxisObjects.textContainer.children.length; i ++ )
 		{
 			var xpos = -( i * (this._axisLength/numSteps) );
-			var text = this._xAxisTextObj.children[i];
+			var text = this._xAxisObjects.textContainer.children[i];
 			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 			
 			text.position.y = -50;
@@ -663,17 +772,17 @@ if(namespace.GraphView === undefined)
 	}
 	p._xAxisToBottomView = function _xAxisToBottomView()
 	{
-		if (!this._xAxisTextObj) return;
+		if (!this._xAxisObjects) return;
 		
 		var numSteps = this._xAxisValues.numSteps;
 		
-		this._xAxisTextObj.rotation.x =  Math.PI + Math.PI/2;
-		this._xAxisLinesObj.rotation.x = Math.PI + Math.PI/2;
+		this._xAxisObjects.textContainer.rotation.x =  Math.PI + Math.PI/2;
+		this._xAxisObjects.linesContainer.rotation.x = Math.PI + Math.PI/2;
 		
-		for ( var i = 0; i < this._xAxisTextObj.children.length; i ++ )
+		for ( var i = 0; i < this._xAxisObjects.textContainer.children.length; i ++ )
 		{
 			var xpos = -( i * (this._axisLength/numSteps) );
-			var text = this._xAxisTextObj.children[i];
+			var text = this._xAxisObjects.textContainer.children[i];
 			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 			
 			text.position.y = rightOffset - 40;

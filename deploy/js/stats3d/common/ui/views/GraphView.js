@@ -362,33 +362,24 @@ if(namespace.GraphView === undefined)
 		this._graphObjContainer.rotation.z = this._graphValues.rZ;
 		
 		this._targetRotationY = this._graphObjContainer.rotation.y;
-		
-		// Extend X-AXIS
-		if (this._xAxisLine ) {//&& this._xAxisAnimValues) {
-			var vector3 = this._xAxisLine.geometry.vertices[1];
-			if (vector3) {
-				vector3.x = this._xAxisAnimValues.axisLength;
-				this._xAxisLine.geometry.verticesNeedUpdate = true;
-				//console.log(this._xAxisAnimValues.axisLength);
-			}
-		}
-		
-		// Extend Y-AXIS
-		if (this._yAxisLine ) {
-			var vector3 = this._yAxisLine.geometry.vertices[1];
-			if (vector3) {
-				vector3.y = this._yAxisAnimValues.axisLength;
-				this._yAxisLine.geometry.verticesNeedUpdate = true;
-			}
-		}
-		
-		// Extend Z-AXIS
-		if (this._zAxisLine ) {
-			var vector3 = this._zAxisLine.geometry.vertices[1];
-			if (vector3) {
-				vector3.z = this._zAxisAnimValues.axisLength;
-				this._zAxisLine.geometry.verticesNeedUpdate = true;
-			}
+
+		// Animate X, Y, Z Axes
+		if ( this._axesObjects.animationValues )
+		{
+			var axes = ["x", "y", "z"];
+			var lines = this._axesObjects.animationValues.lines;
+			if ( lines )
+			{
+				for ( var i = 0; i < lines.length; i ++ )
+				{
+					var axis = axes[i];
+					var len = lines[i].axisLength;
+					var line = this._axesObjects.lines[i];
+					var vector3 = line.geometry.vertices[1];
+					vector3[axis] = len;
+					line.geometry.verticesNeedUpdate = true;
+				}
+			}			
 		}
 		
 		// Draw X-AXIS lines
@@ -628,13 +619,13 @@ if(namespace.GraphView === undefined)
 	// RENDER AXES =================================
 	p._renderAxes = function _renderAxes()
 	{
-		// DRAW AXES
-		
-		var axisObjs = [{ lineName:"_xAxisLine", lineColor:0xff0000, valuesName:"_xAxisAnimValues", endValue:this._axisLength},
-						{ lineName:"_yAxisLine", lineColor:0x00ff00, valuesName:"_yAxisAnimValues", endValue:this._axisLength},
-						{ lineName:"_zAxisLine", lineColor:0x0000ff, valuesName:"_zAxisAnimValues", endValue:-this._axisLength}];
+		var axisObjs = [{ lineColor:0xff0000, endValue:this._axisLength},
+						{ lineColor:0x00ff00, endValue:this._axisLength},
+						{ lineColor:0x0000ff, endValue:-this._axisLength}];
 		
 		var delay = 0;
+		
+		this._axesObjects = { lines: [], animationValues: { lines: [] } };
 		
 		for ( var i = 0; i < 3; i ++ )
 		{
@@ -643,12 +634,17 @@ if(namespace.GraphView === undefined)
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 
-			this[axisObj.lineName] = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: axisObj.lineColor, opacity: 0.5 } ) );
-			this._graphObj.add( this[axisObj.lineName] );
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: axisObj.lineColor, opacity: 1 } ) );
 			
-			this[axisObj.valuesName] = {axisLength:0};
+			this._graphObj.add( line );
+			this._axesObjects.lines.push(line);
 			
-			var graphTween = new TWEEN.Tween(this[axisObj.valuesName]);
+			var animVal = this._axesObjects.animationValues.lines[i];
+			if (!animVal) {
+				animVal = this._axesObjects.animationValues.lines[i] = { axisLength:0 };
+			}			
+			
+			var graphTween = new TWEEN.Tween(animVal);
 			graphTween.to({axisLength: axisObj.endValue}, this._animLength);
 			graphTween.delay(delay);
 			graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
@@ -678,9 +674,7 @@ if(namespace.GraphView === undefined)
 		this._graphObj.add( this._xAxisObjects.textContainer );
 		
 		this._xAxisObjects.linesContainer = new THREE.Object3D();
-		this._graphObj.add( this._xAxisObjects.linesContainer );
-
-		
+		this._graphObj.add( this._xAxisObjects.linesContainer );		
 		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
@@ -690,7 +684,7 @@ if(namespace.GraphView === undefined)
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 		
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.5 } ) );
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 1 } ) );
 			line.position.x = xpos;
 			
 			this._xAxisObjects.linesContainer.add( line );
@@ -714,7 +708,7 @@ if(namespace.GraphView === undefined)
 			delay += 0;
 
 			var text = this._createText(axisNum.toString());
-			//text.children[0].material.opacity = 0.2;
+			text.children[0].material.opacity = 0;
 			text.position.x = xpos - 10;
 			
 			this._xAxisObjects.textContainer.add( text );

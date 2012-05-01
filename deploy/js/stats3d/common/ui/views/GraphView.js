@@ -178,7 +178,15 @@ if(namespace.GraphView === undefined)
 		this._mouseY = 0;
 		this._mouseYOnMouseDown = 0;
 		
-		//this._animationValues = {"lineEnvelope": 0, "contentEnvelope": 0};
+		//this._cameraValues = {"lineEnvelope": 0, "contentEnvelope": 0};
+		this._cameraValues = {camRX: this._camera.rotation.x, 
+							  camRY: this._camera.rotation.y, 
+							  camRZ: this._camera.rotation.z, 
+							  camPX: this._camera.position.x, 
+							  camPY:this._camera.position.y, 
+							  camPZ:this._camera.position.z};
+		this._graphValues = {rX: 0, rY: 0, rZ: 0};
+		
 		this._updateTimeCallback = ListenerFunctions.createListenerFunction(this, this._updateTime);
 		this._completeTimeCallback = ListenerFunctions.createListenerFunction(this, this._completeTime);
 		
@@ -267,55 +275,22 @@ if(namespace.GraphView === undefined)
 
 	};
 	
-	p._toFixedView = function _toFixedView()
-	{
-		this._freeRotate = false;
-		//this._camera.position = this._fixedCameraPos;
-		
-		this._graphObjContainer.rotation = new THREE.Vector3(0,0,0);
-	}
-	p._toDynamicView = function _toDynamicView()
-	{
-		//this._freeRotate = true;
-		//this._camera.position = this._dynamicCameraPos;
-		
-		this._camera.lookAt(this._cameraLookAt);
-		
-		this._graphObjContainer.rotation = new THREE.Vector3(0,0,0);
-	}
-	
 	p.toBottomView = function toBottomView()
 	{
 		var oldView = this._currentView;
 		this._currentView = GraphView.BOTTOM;
-	
-		this._toFixedView();
-		//this._camera.toBottomView();
-		/*
-		this._camera.rotation.x = Math.PI / 2;
-		this._camera.rotation.y = 0;
-		this._camera.rotation.z = - Math.PI / 2;
 		
-		this._camera.position.x = this._offsetLeft;
-		this._camera.position.z = -this._offsetTop;
-		*/
-		this._camera.rotationAutoUpdate = false;
+		this._freeRotate = false;
 		
-		//this._animationValues = {camRX: Math.PI / 2, camRY: 0, camRZ: -Math.PI / 2, camPX: this._offsetLeft, camPY:0, camPZ:-this._offsetTop};
-		this._animationValues = {camRX: this._camera.rotation.x, camRY: this._camera.rotation.y, camRZ: this._camera.rotation.z, camPX: this._camera.position.x, camPY:this._camera.position.y, camPZ:this._camera.position.z};
+		this._graphValues = {rX: this._graphObjContainer.rotation.x, rY: this._graphObjContainer.rotation.y, rZ: this._graphObjContainer.rotation.z};
 		
-		var camTween = new TWEEN.Tween(this._animationValues);
-		
-		if (oldView == GraphView.RIGHT) {
-			camTween.to({camRX: Math.PI / 2, camRY: 0, camRZ: -Math.PI / 2, camPX: this._offsetLeft, camPY:0, camPZ:-this._offsetTop}, this._animLength);
-		} else {
-			camTween.to({camRX: Math.PI / 2, camRY: 0, camRZ: -Math.PI / 2, camPX: this._offsetLeft, camPY:0, camPZ:-this._offsetTop}, this._animLength);
-		}
-		
-		camTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
-		camTween.onUpdate(this._updateTimeCallback);
-		camTween.start();
-		
+		var graphTween = new TWEEN.Tween(this._graphValues);
+		graphTween.to({rX: 0, rY: -Math.PI / 2, rZ: Math.PI / 2}, this._animLength);
+		graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+		graphTween.onUpdate(this._updateTimeCallback);
+		graphTween.onComplete(this._completeTimeCallback);
+		graphTween.start();		
+
 		this._xAxisToBottomView();
 		this._yAxisToDefaultView();
 		this._zAxisToBottomView();
@@ -329,26 +304,16 @@ if(namespace.GraphView === undefined)
 	{
 		this._currentView = GraphView.RIGHT;
 		
-		this._toFixedView();
-		/*
-		//this._camera.toRightView();
+		this._freeRotate = false;
 		
-		this._camera.rotation.x = 0;
-		this._camera.rotation.y = Math.PI / 2;
-		this._camera.rotation.z = 0;
+		this._graphValues = {rX: this._graphObjContainer.rotation.x, rY: this._graphObjContainer.rotation.y, rZ: this._graphObjContainer.rotation.z};
 		
-		this._camera.position.y = this._offsetTop;
-		this._camera.position.z = -this._offsetLeft;
-		*/
-		this._camera.rotationAutoUpdate = false;
-		
-		this._animationValues = {camRX: this._camera.rotation.x, camRY: this._camera.rotation.y, camRZ: this._camera.rotation.z, camPX: this._camera.position.x, camPY:this._camera.position.y, camPZ:this._camera.position.z};
-		
-		var camTween = new TWEEN.Tween(this._animationValues);
-		camTween.to({camRX: 0, camRY: Math.PI / 2, camRZ: 0, camPX: 0, camPY:this._offsetTop, camPZ:-this._offsetTop}, this._animLength);
-		camTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
-		camTween.onUpdate(this._updateTimeCallback)
-		camTween.start();
+		var graphTween = new TWEEN.Tween(this._graphValues);
+		graphTween.to({rX: 0, rY:-Math.PI / 2, rZ: 0}, this._animLength);
+		graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+		graphTween.onUpdate(this._updateTimeCallback);
+		graphTween.onComplete(this._completeTimeCallback);
+		graphTween.start();
 		
 		this._xAxisToDefaultView();
 		this._yAxisToRightView();
@@ -361,27 +326,19 @@ if(namespace.GraphView === undefined)
 	
 	p.toFrontView = function toFrontView()
 	{
+		var oldView = this._currentView;
 		this._currentView = GraphView.FRONT;
 		
-		this._toFixedView();
-		/*
-		//this._camera.toFrontView();
+		this._freeRotate = false;
 		
-		this.rotation.x = 0;
-		this.rotation.y = 0;
-		this.rotation.z = 0;
-		this._camera.position.x = this._offsetLeft;
-		this._camera.position.y = this._offsetTop;
-		*/
-		this._camera.rotationAutoUpdate = false;
+		this._graphValues = {rX: this._graphObjContainer.rotation.x, rY: this._graphObjContainer.rotation.y, rZ: this._graphObjContainer.rotation.z};
 		
-		this._animationValues = {camRX: this._camera.rotation.x, camRY: this._camera.rotation.y, camRZ: this._camera.rotation.z, camPX: this._camera.position.x, camPY:this._camera.position.y, camPZ:this._camera.position.z};
-		
-		var camTween = new TWEEN.Tween(this._animationValues);
-		camTween.to({camRX: 0, camRY:0, camRZ: 0, camPX: this._offsetLeft, camPY:this._offsetTop, camPZ:0}, this._animLength);
-		camTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
-		camTween.onUpdate(this._updateTimeCallback);
-		camTween.start();
+		var graphTween = new TWEEN.Tween(this._graphValues);
+		graphTween.to({rX: 0, rY:0, rZ: 0}, this._animLength);
+		graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+		graphTween.onUpdate(this._updateTimeCallback);
+		graphTween.onComplete(this._completeTimeCallback);
+		graphTween.start();
 		
 		this._xAxisToDefaultView();
 		this._yAxisToDefaultView();
@@ -395,25 +352,17 @@ if(namespace.GraphView === undefined)
 	p.toOverView = function toOverView()
 	{
 		this._currentView = GraphView.OVER;
-		
-		this._toDynamicView();
-		//this._camera.rotationAutoUpdate = true;
-		/*
-			this._camera.rotation.x = -Math.PI/12;
-			this._camera.rotation.y = Math.PI/4;
-			this._camera.rotation.z = Math.PI/16;		
-		*/
-		this._cameraDefaultRotation = new THREE.Vector3(-Math.PI/12, Math.PI/4, Math.PI/16);
-		this._camera.rotationAutoUpdate = false;
 	
-		this._animationValues = {camRX: this._camera.rotation.x, camRY: this._camera.rotation.y, camRZ: this._camera.rotation.z, camPX: this._camera.position.x, camPY:this._camera.position.y, camPZ:this._camera.position.z};
+		this._freeRotate = false;
 		
-		var camTween = new TWEEN.Tween(this._animationValues);
-		camTween.to({camRX: this._cameraDefaultRotation.x, camRY: this._cameraDefaultRotation.y, camRZ: this._cameraDefaultRotation.z, camPX: 0, camPY:0, camPZ:0}, this._animLength);
-		camTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
-		camTween.onUpdate(this._updateTimeCallback);
-		camTween.onComplete(this._completeTimeCallback);
-		camTween.start();
+		this._graphValues = {rX: this._graphObjContainer.rotation.x, rY: this._graphObjContainer.rotation.y, rZ: this._graphObjContainer.rotation.z};
+		
+		var graphTween = new TWEEN.Tween(this._graphValues);
+		graphTween.to({rX: Math.PI/12, rY:-Math.PI/4, rZ: 0}, this._animLength);
+		graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+		graphTween.onUpdate(this._updateTimeCallback);
+		graphTween.onComplete(this._completeTimeCallback);
+		graphTween.start();
 		
 		this._xAxisToDefaultView();
 		this._yAxisToDefaultView();
@@ -426,17 +375,23 @@ if(namespace.GraphView === undefined)
 	
 	p._updateTime = function _updateTime() 
 	{
-		this._camera.rotation.x = this._animationValues.camRX;
-		this._camera.rotation.y = this._animationValues.camRY;
-		this._camera.rotation.z = this._animationValues.camRZ;
+		this._camera.rotation.x = this._cameraValues.camRX;
+		this._camera.rotation.y = this._cameraValues.camRY;
+		this._camera.rotation.z = this._cameraValues.camRZ;
 		
-		this._camera.position.x = this._animationValues.camPX;
-		this._camera.position.y = this._animationValues.camPY;
-		this._camera.position.z = this._animationValues.camPZ;
+		this._camera.position.x = this._cameraValues.camPX;
+		this._camera.position.y = this._cameraValues.camPY;
+		this._camera.position.z = this._cameraValues.camPZ;
+		
+		this._graphObjContainer.rotation.x = this._graphValues.rX;
+		this._graphObjContainer.rotation.y = this._graphValues.rY;
+		this._graphObjContainer.rotation.z = this._graphValues.rZ;
+		
+		this._targetRotationY = this._graphObjContainer.rotation.y;
 	};
 	p._completeTime = function _completeTime()
 	{
-		//this._freeRotate = true;
+		this._freeRotate = true;
 	}
 	
 	p.setFov = function setFov( fov )

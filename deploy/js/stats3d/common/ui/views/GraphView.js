@@ -162,6 +162,7 @@ if(namespace.GraphView === undefined)
 		this._graphValues = {rX: 0, rY: 0, rZ: 0};
 		
 		this._updateTimeCallback = ListenerFunctions.createListenerFunction(this, this._updateTime);
+		this._updateAxisTextCallback = ListenerFunctions.createListenerFunction(this, this._updateAxisText);
 		this._completeTimeCallback = ListenerFunctions.createListenerFunction(this, this._completeTime);
 		
 		document.addEventListener( 'mousedown', function(event) { scope._onDocumentMouseDown(event); }, false );
@@ -269,9 +270,9 @@ if(namespace.GraphView === undefined)
 		this._yAxisToDefaultView();
 		this._zAxisToBottomView();
 		
-		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
-		if (this._yAxisTextObj) 	this._graphObj.remove(this._yAxisTextObj);
-		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
+		//if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
+		//if (this._yAxisTextObj) 	this._graphObj.remove(this._yAxisTextObj);
+		//if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
 	}
 	
 	p.toRightView = function toRightView()
@@ -293,9 +294,9 @@ if(namespace.GraphView === undefined)
 		this._yAxisToRightView();
 		this._zAxisToRightView();
 		
-		if (this._xAxisObjects) 	this._graphObj.remove(this._xAxisObjects.container);
-		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
-		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
+		//if (this._xAxisObjects) 	this._graphObj.remove(this._xAxisObjects.container);
+		//if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
+		//if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
 	}
 	
 	p.toFrontView = function toFrontView()
@@ -318,9 +319,9 @@ if(namespace.GraphView === undefined)
 		this._yAxisToDefaultView();
 		this._zAxisToDefaultView();
 		
-		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
-		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
-		if (this._zAxisTextObj) 	this._graphObj.remove(this._zAxisTextObj);
+		//if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
+		//if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
+		//if (this._zAxisTextObj) 	this._graphObj.remove(this._zAxisTextObj);
 	}
 	
 	p.toOverView = function toOverView()
@@ -342,9 +343,9 @@ if(namespace.GraphView === undefined)
 		this._yAxisToDefaultView();
 		this._zAxisToDefaultView();
 		
-		if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
-		if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
-		if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
+		//if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
+		//if (this._yAxisTextObj) 	this._graphObj.add(this._yAxisTextObj);
+		//if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
 	}
 	
 	p._updateTime = function _updateTime() 
@@ -405,10 +406,46 @@ if(namespace.GraphView === undefined)
 					var text = markerObj.children[1];
 					text.children[0].material.opacity = opacity;
 				}
-			}
+			}		
 		}
 		
 	};
+	p._updateAxisText = function _updateAxisText()
+	{
+		// Draw X-AXIS lines
+		if ( this._xAxisObjects.animationValues )
+		{			
+			// Rotating text when viewing from different angles
+			var texts = this._xAxisObjects.animationValues.text;
+			if ( texts )
+			{
+				for ( var i = 0; i < texts.length; i ++ )
+				{
+					var text = this._xAxisObjects.text[i];
+					text.position.x = texts[i].pX;
+					text.position.y = texts[i].pY;
+					text.position.z = texts[i].pZ;
+					text.rotation.x = texts[i].rX;
+					text.rotation.y = texts[i].rY;
+					text.rotation.z = texts[i].rZ;
+					//console.log("text pX "+texts[i].pX+" pY "+texts[i].pY+" pZ "+texts[i].pZ+" rX "+texts[i].rX+" rY "+texts[i].rY+" rZ "+texts[i].rZ);
+				}
+			}
+			
+			var titleText = this._xAxisObjects.animationValues.titleText;
+			if ( titleText )
+			{
+				var text = this._xAxisObjects.titleText;
+				text.position.x = titleText.pX;
+				text.position.y = titleText.pY;
+				text.position.z = titleText.pZ;
+				text.rotation.x = titleText.rX;
+				text.rotation.y = titleText.rY;
+				text.rotation.z = titleText.rZ;
+			}			
+		}
+	}
+	
 	p._completeTime = function _completeTime()
 	{
 		this._freeRotate = true;
@@ -617,7 +654,7 @@ if(namespace.GraphView === undefined)
 						{ lineColor:0x00ff00, endValue:this._axisLength},
 						{ lineColor:0x0000ff, endValue:-this._axisLength}];
 		
-		var delay = 0;
+		var delay = 1000;
 		
 		this._axesObjects = { lines: [], animationValues: { lines: [] } };
 		
@@ -638,6 +675,7 @@ if(namespace.GraphView === undefined)
 				animVal = this._axesObjects.animationValues.lines[i] = { axisLength:0 };
 			}			
 			
+			// Animate in X,Y,Z Axes
 			var graphTween = new TWEEN.Tween(animVal);
 			graphTween.to({axisLength: axisObj.endValue}, this._animLength);
 			graphTween.delay(delay);
@@ -660,11 +698,13 @@ if(namespace.GraphView === undefined)
 		var axisNum = this._xAxisValues.minVal;
 		var numSteps = this._xAxisValues.numSteps;
 
-		this._xAxisObjects = { lines: [], text: [], markers: [],
-							   animationValues: { lines: [], text: [], markers: [] },
+		this._xAxisObjects = { lines: [], text: [], markers: [], titleText: null,
+							   animationValues: { lines: [], text: [], markers: [], titleText: {} },
 							   container: new THREE.Object3D() };
 
 		this._graphObj.add( this._xAxisObjects.container );	
+		
+		this._xMarkerTextDefaults = [];
 		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
@@ -683,27 +723,34 @@ if(namespace.GraphView === undefined)
 			
 			markerObj.add( line );
 			this._xAxisObjects.lines.push(line);
-			
-			var animVal = this._xAxisObjects.animationValues.lines[i];
-			if (!animVal) {
-				animVal = this._xAxisObjects.animationValues.lines[i] = { rX:Math.PI/2, axisLength:0 };
-			}
-			
-			var animLength = 150;
 
 			var text = this._createText(axisNum.toString());
 			text.children[0].material.opacity = 0;
 			text.position.x = xpos - 10;
 			
+			var state = {};
+			state.position = new THREE.Vector3(xpos - 10, -50, 0);
+			state.rotation = new THREE.Vector3(0, 0, Math.PI + Math.PI/2);
+			
+			if (!this._xMarkerTextDefaults[i]) {
+				this._xMarkerTextDefaults.push(state);
+			}
+			
+			text.position = state.position;
+			text.rotation = state.rotation;
+			
 			markerObj.add( text );
 			this._xAxisObjects.text.push(text);
 			
-			animVal = this._xAxisObjects.animationValues.markers[i];
-			if (!animVal) {
-				animVal = this._xAxisObjects.animationValues.markers[i] = { rX:Math.PI/2, opacity: 0, axisLength:0 };
-			}			
+			// Set animation values to tween in marker objects (containing text and marker line for point on axis)
+			//var animVal = this._xAxisObjects.animationValues.markers[i];
+			//if (!animVal) {
+				var animVal = this._xAxisObjects.animationValues.markers[i] = { rX:Math.PI/2, opacity: 0, axisLength:0 };
+			//}
 			
-			graphTween = new TWEEN.Tween(animVal);
+			var animLength = 150;
+			// Begin tween for marker objects
+			var graphTween = new TWEEN.Tween(animVal);
 			graphTween.to({rX: 0, opacity: 1, axisLength: -20}, animLength);
 			graphTween.delay(delay);
 			graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
@@ -717,36 +764,111 @@ if(namespace.GraphView === undefined)
 		
 		var title = "GDP Per Capita (2005 Int $)";
 		var text = this._createText(title, 20);
-		this._xAxisTitle = text;
-		// adding the title to the textObj means I'll need to translate.. Should probably be nested in a parent xAxisObj
-		//this._xAxisObjects.container.add( text );
 		
-		this._xAxisToDefaultView();
+		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+		
+		state = { position: new THREE.Vector3(centreOffset + this._axisLength/2, -160, 0),
+				  rotation: new THREE.Vector3(0, 0, 0) };
+		
+		this._xMarkerTitleDefault = state;
+		
+		text.position = this._xMarkerTitleDefault.position;
+		text.rotation = this._xMarkerTitleDefault.rotation;
+		
+		this._xAxisObjects.container.add( text );
+		this._xAxisObjects.titleText = text;
+		
+		//this._xAxisToDefaultView(delay);
 	}
-	p._xAxisToDefaultView = function _xAxisToDefaultView()
+	p._xAxisToDefaultView = function _xAxisToDefaultView(delay)
 	{
 		if (!this._xAxisObjects) return;
 		
+		if (!delay) delay = 1200;
+		
 		var numSteps = this._xAxisValues.numSteps;
 		this._xAxisObjects.container.rotation.x = 0;
-		//this._xAxisObjects.linesContainer.rotation.x = 0;
 		
-		for ( var i = 0; i < this._xAxisObjects.container.children.length; i ++ )
+		for ( var i = 0; i < this._xAxisObjects.markers.length; i ++ )
 		{
-			var xpos = -( i * (this._axisLength/numSteps) );
-			var text = this._xAxisObjects.container.children[i].children[1];
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			var markerObj = this._xAxisObjects.markers[i];
+			var xpos = ( i * (this._axisLength/numSteps) );
+			var text = markerObj.children[1];
+
+			var state = {};
+			state.position = new THREE.Vector3(xpos - 10, -50, 0);
+			state.rotation = new THREE.Vector3(0, 0, Math.PI + Math.PI/2);			
 			
-			text.position.y = -50;
-			text.rotation.x = 0;
-			text.rotation.z = Math.PI + Math.PI/2;
+			//if ( i == 0 ) {
+			//	console.log("_xMTD0 pX "+state.position.x+" pY "+state.position.y+" pZ "+state.position.z+" rX "+state.rotation.x+" rY "+state.rotation.y+" rZ "+state.rotation.z);
+			//}
+			
+			//text.position = state.position;
+			//text.rotation = state.rotation;
+			
+			var animLength = 150;
+
+			var animVal = this._xAxisObjects.animationValues.text[i] = { pX: text.position.x, 
+																		 pY: text.position.y,
+																		 pZ: text.position.z,
+																		 rX: text.rotation.x, 
+																		 rY: text.rotation.y, 
+																		 rZ: text.rotation.z };
+
+			// Create animation to tween text markers from current view to default view
+			var graphTween = new TWEEN.Tween(animVal);
+			graphTween.to({ pX: state.position.x,
+							pY: state.position.y, 
+							pZ: state.position.z, 
+							rX: state.rotation.x, 
+							rY: state.rotation.y, 
+							rZ: state.rotation.z }, animLength);
+			graphTween.delay(delay);
+			graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+			graphTween.onUpdate(this._updateAxisTextCallback);
+			graphTween.start();		
+			
+			delay += 50;
 		}
 		
-		text = this._xAxisTitle;
+		text = this._xAxisObjects.titleText;
+		//var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+		//text.position.x = centreOffset + this._axisLength/2;
+		//text.position.y = -160;
+		//text.rotation.x = 0;
+		
+		//text.position = this._xMarkerTitleDefault.position;
+		//text.rotation = this._xMarkerTitleDefault.rotation;
+		
+		//state = this._xMarkerTitleDefault;
+		
+		delay += 100;
+		
 		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		text.position.x = centreOffset + this._axisLength/2;
-		text.position.y = -160;
-		text.rotation.z = 0;
+		
+		state = { position: new THREE.Vector3(centreOffset + this._axisLength/2, -160, 0),
+				  rotation: new THREE.Vector3(0, 0, 0) };		
+		
+		var animLength = 500;
+		var animVal = this._xAxisObjects.animationValues.titleText = { pX: text.position.x, 
+																	 pY: text.position.y,
+																	 pZ: text.position.z,
+																	 rX: text.rotation.x, 
+																	 rY: text.rotation.y, 
+																	 rZ: text.rotation.z };
+
+		// Create animation to tween TITLE from current view to default view
+		var graphTween = new TWEEN.Tween(animVal);
+		graphTween.to({ pX: state.position.x,
+						pY: state.position.y, 
+						pZ: state.position.z, 
+						rX: state.rotation.x, 
+						rY: state.rotation.y, 
+						rZ: state.rotation.z }, animLength);
+		graphTween.delay(delay);
+		graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+		graphTween.onUpdate(this._updateAxisTextCallback);
+		graphTween.start();			
 	}
 	p._xAxisToBottomView = function _xAxisToBottomView()
 	{
@@ -755,21 +877,88 @@ if(namespace.GraphView === undefined)
 		var numSteps = this._xAxisValues.numSteps;
 		
 		this._xAxisObjects.container.rotation.x =  Math.PI + Math.PI/2;
-		//this._xAxisObjects.linesContainer.rotation.x = Math.PI + Math.PI/2;
 		
-		for ( var i = 0; i < this._xAxisObjects.container.children.length; i ++ )
+		this._xMarkerTextBottom = [];
+		
+		var delay = 1200;
+		
+		for ( var i = 0; i < this._xAxisObjects.markers.length; i ++ )
 		{
-			var xpos = -( i * (this._axisLength/numSteps) );
-			var text = this._xAxisObjects.container.children[i].children[1];
+			var xpos = ( i * (this._axisLength/numSteps) );
+			var text = this._xAxisObjects.markers[i].children[1];
 			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 			
-			text.position.y = rightOffset - 40;
-			text.rotation.x = Math.PI;
+			var state = {};
+			state.position = new THREE.Vector3(xpos, rightOffset - 40, 0);
+			state.rotation = new THREE.Vector3(Math.PI, 0, Math.PI + Math.PI/2);
+			
+			if (!this._xMarkerTextBottom[i]) {
+				this._xMarkerTextBottom.push(state);
+			}
+			
+			//text.position = state.position;
+			//text.rotation = state.rotation;
+			
+			var animLength = 150;
+			// Set initial positions for animating text markers from current view to bottom view.
+			//var animVal = this._xAxisObjects.animationValues.text[i];
+			//if (!animVal) {
+			var animVal = this._xAxisObjects.animationValues.text[i] = { pX: text.position.x, 
+																		 pY: text.position.y,
+																		 pZ: text.position.z,
+																		 rX: text.rotation.x, 
+																		 rY: text.rotation.y, 
+																		 rZ: text.rotation.z };
+			//}			
+			// Create animation to tween text markers from current view to bottom view
+			var graphTween = new TWEEN.Tween(animVal);
+			graphTween.to({ pX: state.position.x,
+							pY: state.position.y, 
+							pZ: state.position.z, 
+							rX: state.rotation.x, 
+							rY: state.rotation.y, 
+							rZ: state.rotation.z }, animLength);
+			graphTween.delay(delay);
+			graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+			graphTween.onUpdate(this._updateAxisTextCallback);
+			graphTween.start();		
+			
+			delay += 50;			
 		}
 		
-		text = this._xAxisTitle;
+		delay += 100;
+		
+		text = this._xAxisObjects.titleText;
 		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		text.position.y = centreOffset;
+		
+		state = { position: new THREE.Vector3(centreOffset + this._axisLength/2, -140, 0),
+				  rotation: new THREE.Vector3(Math.PI, 0, 0) };
+		
+		this._xMarkerTitleBottom = state;
+		
+		//text.position = this._xMarkerTitleBottom.position;
+		//text.rotation = this._xMarkerTitleBottom.rotation;	
+		
+		var animLength = 500;
+		var animVal = this._xAxisObjects.animationValues.titleText = { pX: text.position.x, 
+																	 pY: text.position.y,
+																	 pZ: text.position.z,
+																	 rX: text.rotation.x, 
+																	 rY: text.rotation.y, 
+																	 rZ: text.rotation.z };
+
+		// Create animation to tween TITLE from current view to BOTTOM view
+		var graphTween = new TWEEN.Tween(animVal);
+		graphTween.to({ pX: state.position.x,
+						pY: state.position.y, 
+						pZ: state.position.z, 
+						rX: state.rotation.x, 
+						rY: state.rotation.y, 
+						rZ: state.rotation.z }, animLength);
+		graphTween.delay(delay);
+		graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+		graphTween.onUpdate(this._updateAxisTextCallback);
+		graphTween.start();			
 	}		
 	
 	p._renderYAxis = function _renderYAxis()

@@ -173,6 +173,7 @@ if(namespace.GraphView === undefined)
 		this._mouseY = 0;
 		this._mouseYOnMouseDown = 0;
 		
+		/*
 		//this._cameraValues = {"lineEnvelope": 0, "contentEnvelope": 0};
 		this._cameraValues = {camRX: this._camera.rotation.x, 
 							  camRY: this._camera.rotation.y, 
@@ -180,6 +181,8 @@ if(namespace.GraphView === undefined)
 							  camPX: this._camera.position.x, 
 							  camPY:this._camera.position.y, 
 							  camPZ:this._camera.position.z};
+		*/
+		
 		this._graphValues = {rX: 0, rY: 0, rZ: 0};
 		
 		document.addEventListener( 'mousedown', function(event) { scope._onDocumentMouseDown(event); }, false );
@@ -367,6 +370,7 @@ if(namespace.GraphView === undefined)
 	
 	p._updateTime = function _updateTime() 
 	{
+		/*
 		this._camera.rotation.x = this._cameraValues.camRX;
 		this._camera.rotation.y = this._cameraValues.camRY;
 		this._camera.rotation.z = this._cameraValues.camRZ;
@@ -374,7 +378,7 @@ if(namespace.GraphView === undefined)
 		this._camera.position.x = this._cameraValues.camPX;
 		this._camera.position.y = this._cameraValues.camPY;
 		this._camera.position.z = this._cameraValues.camPZ;
-		
+		*/
 		this._graphObjContainer.rotation.x = this._graphValues.rX;
 		this._graphObjContainer.rotation.y = this._graphValues.rY;
 		this._graphObjContainer.rotation.z = this._graphValues.rZ;
@@ -679,84 +683,9 @@ if(namespace.GraphView === undefined)
 			delay += 500;		
 		}
 
-		this._renderAxis(delay, "GDP Per Capita (2005 Int $)", this._xAxisViewModel);
-		this._renderAxis(delay += 500, "Estimated HIV Prevalence % (Ages 15-49)", this._yAxisViewModel);
-		this._renderAxis(delay += 500, "Time", this._zAxisViewModel);
-	}
-	
-	p._renderAxis = function _renderAxis(delay, title, axisViewModel)
-	{
-		var axisNum = axisViewModel.values.minVal;
-		var numSteps = axisViewModel.values.numSteps;
-		
-		this._graphObj.add( axisViewModel.container );	
-		
-		axisViewModel.markerTextDefaults = [];
-		
-		for ( var i = 0; i <= numSteps; i ++ )
-		{
-			var geometry = new THREE.Geometry();
-			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		
-			var markerObj = new THREE.Object3D();
-			axisViewModel.container.add( markerObj );
-			axisViewModel.markers.push( markerObj );
-			
-			markerObj.position = axisViewModel.getAxisMarkerPos(i * (this._axisLength/numSteps));
-			
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 1 } ) );
-			
-			markerObj.add( line );
-			axisViewModel.lines.push(line);
-
-			var text = this._createText(axisNum.toString());
-			text.children[0].material.opacity = 0;
-			
-			var state = axisViewModel.getMarkerInitState(text);
-			
-			if (!axisViewModel.markerTextDefaults[i]) {
-				axisViewModel.markerTextDefaults.push(state);
-			}
-			
-			text.position = state.position;
-			text.rotation = state.rotation;
-			
-			markerObj.add( text );
-			axisViewModel.text.push(text);
-			
-			// Set animation values to tween in marker objects (containing text and marker line for point on axis)
-			//var animVal = axisViewModel.animationValues.markers[i];
-
-			// Begin tween for marker objects
-			var animInitObj = axisViewModel.getMarkerInitAnimValues();
-			axisViewModel.animationValues.markers[i] = animInitObj.animObj;
-			
-			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateTimeCallback);
-			
-			delay += 50;
-			
-			axisNum += axisViewModel.values.stepSize;
-		}
-		
-		var text = this._createText(title, 20);
-		
-		state = axisViewModel.getTitleInitState(text);
-		
-		axisViewModel.markerTitleDefault = state;
-		
-		text.position = axisViewModel.markerTitleDefault.position;
-		text.rotation = axisViewModel.markerTitleDefault.rotation;
-		
-		axisViewModel.container.add( text );
-		axisViewModel.titleText = text;
-		
-		text.children[0].material.opacity = 0;
-		
-		var animInitObj = axisViewModel.getTitleInitAnimValues(state);
-		axisViewModel.animationValues.titleText = animInitObj.animObj;
-		
-		this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateAxesTextCallback);
+		this._xAxisViewModel.renderAxis(delay, "GDP Per Capita (2005 Int $)", this._graphObj);
+		this._yAxisViewModel.renderAxis(delay += 500, "Estimated HIV Prevalence % (Ages 15-49)", this._graphObj);
+		this._zAxisViewModel.renderAxis(delay += 500, "Time", this._graphObj);
 	}
 	
 	// RENDER GRIDS =========================================
@@ -861,45 +790,6 @@ if(namespace.GraphView === undefined)
 			line.position.z = ( i * stepSize ) - this._axisLength;
 			this._graphObj.add( line );
 		}
-	}
-	
-	// CREATE TEXT =================================
-	
-	p._createText = function _createText(str, size)
-	{
-		// Get text from hash
-		var hash = document.location.hash.substr( 1 );
-
-		if ( hash.length !== 0 ) {
-
-			str = hash;
-
-		}
-		
-		if (!size)	size = this._defaultTextSize;
-
-		var geometry = new THREE.TextGeometry( str, {
-
-			size: size,
-			height: 1,
-			curveSegments: 2,
-			font: "helvetiker"
-
-		});
-
-		geometry.computeBoundingBox();
-		var centerOffset = -0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
-		var rightOffset = -1 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
-		
-		var textMaterial = new THREE.MeshBasicMaterial( { color:  0x000000, overdraw: true } );
-		var text = new THREE.Mesh( geometry, textMaterial );
-
-		text.doubleSided = false;
-
-		var parent = new THREE.Object3D();
-		parent.add( text );
-		
-		return parent;
 	}
 }
 

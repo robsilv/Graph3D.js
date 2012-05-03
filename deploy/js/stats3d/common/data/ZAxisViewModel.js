@@ -31,17 +31,30 @@
 		};
 		
 		// VALUES ============================================
-		p.getAxisMarkerPos = function getAxisMarkerPos(step)
+		p._getAxisMarkerPos = function _getAxisMarkerPos(step)
 		{
 			return new THREE.Vector3(0, 0, -step );
 		}
-		p.getMarkerInitState = function getMarkerInitState(text)
+		p._getMarkerInitState = function _getMarkerInitState(text)
 		{
 		    var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
     
-			return { position: new THREE.Vector3(rightOffset - 40, 20, this._defaultTextSize/2), rotation: new THREE.Vector3(-Math.PI/2, 0, 0) };
+			return { position: new THREE.Vector3(rightOffset - 40, 0, this._defaultTextSize/2), rotation: new THREE.Vector3(-Math.PI/2, 0, 0) };
 		}
-		p.getMarkerInitAnimValues = function getMarkerInitAnimValues()
+		p._getMarkerRightState = function _getMarkerRightState(text)
+		{
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			return { position: new THREE.Vector3(rightOffset - 40, 0, -this._defaultTextSize/2), rotation: new THREE.Vector3(Math.PI/2, 0, 0) };
+		}
+		p._getMarkerBottomState = function _getMarkerBottomState(text)
+		{
+			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			return { position: new THREE.Vector3(rightOffset - 40, 0, -this._defaultTextSize/2), rotation: new THREE.Vector3(Math.PI/2, 0, 0) };
+		}
+		
+		p._getMarkerInitAnimValues = function _getMarkerInitAnimValues()
 		{
 			var obj = { animLength: 150,
 						animObj: { rX:Math.PI/2, opacity: 0, yAxisLength:0 },
@@ -49,16 +62,36 @@
 						
 			return obj;
 		}
-		p.getTitleInitState = function getTitleInitState(text)
+		
+		p._getTitleInitState = function _getTitleInitState(text)
 		{
 			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
   
-			var state = { position: new THREE.Vector3(-120, 0, -this._axisLength/2 - centreOffset),
-						  rotation: new THREE.Vector3(-Math.PI/2, 0, Math.PI/2) };
+			var state = { position: new THREE.Vector3(-120, 0, -this._axisLength/2 + centreOffset),
+						  rotation: new THREE.Vector3(-Math.PI/2, 0, Math.PI + Math.PI/2) };
 
 			return state;
 		}
-		p.getTitleInitAnimValues = function getTitleInitAnimValues(state)
+		p._getTitleRightState = function _getTitleRightState(text)
+		{
+			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			var state = { position: new THREE.Vector3(-120, 0, -this._axisLength/2 - centreOffset),
+						  rotation: new THREE.Vector3(Math.PI/2, 0, Math.PI + Math.PI/2) };
+
+			return state;	
+		}
+		p._getTitleBottomState = function _getTitleBottomState(text)
+		{
+			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			
+			var state = { position: new THREE.Vector3(-120, 0, -this._axisLength/2 - centreOffset),
+						  rotation: new THREE.Vector3(Math.PI/2, 0, Math.PI + Math.PI/2) };
+
+			return state;	
+		}
+		
+		p._getTitleInitAnimValues = function getTitleInitAnimValues(state)
 		{
 			var obj = { animLength: 1000,
 						animObj: { pY:state.position.y-150 , opacity: 0 },
@@ -66,88 +99,113 @@
 			
 			return obj;
 		}
-		
-		//ANIMATIONS =====================================
-		p.axisToDefaultView = function axisToDefaultView()
+		/*
+		p._getDefaultAxisAnimValues = function _getDefaultAxisAnimValue()
 		{
-			if (!this.values) return;
+			var obj = { animLength: 1000,
+						animObj: { rZ: this.container.rotation.y },
+						targObj: { rZ: 0 } };
 			
+			return obj;
+		}
+		*/
+		//ANIMATIONS =====================================
+
+		p.axisToRightView = function axisToRightView()
+		{
 			var numSteps = this.values.numSteps;
-			this.container.rotation.z = 0;
-		
+			
+			//this.container.rotation.z = Math.PI/2;
+			
+			var delay = 0;
+			var animLength = 1000;
+			var animObj = this.animationValues.container = { rZ: this.container.rotation.z };
+			this._createGraphTween(animObj, { rZ: Math.PI/2 }, animLength, delay, this._updateTimeCallback);
+			
+			delay += 1200;
+			
 			for ( var i = 0; i < this.markers.length; i ++ )
 			{
-				var zpos = -( i * (this._axisLength/numSteps) );
 				var text = this.markers[i].children[1];
 
-				var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+				var state = this._getMarkerRightState(text)
 				
-				text.position.x = rightOffset - 40; //?
-				text.position.y = 20;				//?
-				text.position.z = this._defaultTextSize / 2;
-				text.rotation.x = -Math.PI/2;
-				text.rotation.z = 0;	
+				//text.position = state.position;
+				//text.rotation = state.rotation;
+				
+				var animLength = 150;
+				var animObj = this.animationValues.text[i] = {};
+				
+				this._animateAxisText( text, animObj, state, animLength, delay );
+				
+				delay += 50;
 			}
 			
 			text = this.titleText;
-			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			text.position.x = -120;
-			text.position.z = -this._axisLength/2 - centreOffset;
-			text.rotation.x = -Math.PI/2;
-			text.rotation.z = Math.PI/2;
+			
+			delay += 100;
+			
+			var state = this._getTitleRightState(text);
+			
+			//text.position = state.position;
+			//text.rotation = state.rotation;
+			
+			var animLength = 500;
+			if (!this.animationValues.titleText) {
+				this.animationValues.titleText = {};
+			}
+			var animObj = this.animationValues.titleText;
+			
+			this._animateAxisText( text, animObj, state, animLength, delay );
 		}
 		
 		p.axisToBottomView = function axisToBottomView()
 		{
 			var numSteps = this.values.numSteps;
-			this.container.rotation.z = 0;
+			var delay = 0;
+			
+			//this.container.rotation.z = 0;
+			
+			var animLength = 1000;
+			var animObj = this.animationValues.container = { rZ: this.container.rotation.z };
+			this._createGraphTween(animObj, { rZ: 0 }, animLength, delay, this._updateTimeCallback);			
+			
+			delay += 1200;
 			
 			for ( var i = 0; i < this.markers.length; i ++ )
 			{
-				var zpos = -( i * (this._axisLength/numSteps) );
 				var text = this.markers[i].children[1];
 
-				var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+				var state = this._getMarkerBottomState(text);
 				
-				text.position.x = rightOffset - 40;
-				text.position.z = -this._defaultTextSize/2;
-				text.rotation.x = Math.PI/2;
-				text.rotation.z = 0;
+				//text.position = state.position;
+				//text.rotation = state.rotation;
+				
+				var animLength = 150;
+				var animObj = this.animationValues.text[i] = {};
+				
+				this._animateAxisText( text, animObj, state, animLength, delay );
+				
+				delay += 50;
 			}
 			
 			text = this.titleText;
-			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			text.position.x = -140;
-			text.position.z = -this._axisLength/2 - centreOffset;		
-			text.rotation.x = Math.PI/2;
-			text.rotation.z = Math.PI + Math.PI/2;
-		}
-
-		p.axisToRightView = function axisToRightView()
-		{
-			var numSteps = this.values.numSteps;
-			this.container.rotation.z = Math.PI/2;
 			
-			for ( var i = 0; i < this.markers.length; i ++ )
-			{
-				var zpos = -( i * (this._axisLength/numSteps) );
-				var text = this.markers[i].children[1];
+			delay += 100;
 
-				var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-				
-				text.position.x = rightOffset - 40;
-				text.position.z = - this._defaultTextSize/2;
-				text.rotation.x = Math.PI/2;
-				text.rotation.z = 0;
+			state = this._getTitleBottomState(text);
+			
+			//text.position = state.position;
+			//text.rotation = state.rotation;
+			
+			var animLength = 500;
+			if (!this.animationValues.titleText) {
+				this.animationValues.titleText = {};
 			}
+			var animObj = this.animationValues.titleText;
 			
-			text = this.titleText;
-			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			text.position.x = -140;
-			text.position.z = -this._axisLength/2 - centreOffset;		
-			text.rotation.x = Math.PI/2;
-			text.rotation.z = Math.PI + Math.PI/2;
-		}		
+			this._animateAxisText( text, animObj, state, animLength, delay );
+		}	
 	}
 })();
 

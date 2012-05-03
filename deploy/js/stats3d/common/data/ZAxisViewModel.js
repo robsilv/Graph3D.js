@@ -30,6 +30,7 @@
 			
 		};
 		
+		// VALUES ============================================
 		p.getAxisMarkerPos = function getAxisMarkerPos(step)
 		{
 			return new THREE.Vector3(0, 0, -step );
@@ -64,6 +65,98 @@
 						targObj: { pY:state.position.y, opacity: 1 } };
 			
 			return obj;
+		}
+		
+		//ANIMATIONS =====================================
+		p.axisToDefaultView = function axisToDefaultView()
+		{
+			if (!this.values) return;
+			
+			var numSteps = this.values.numSteps;
+			this.container.rotation.z = 0;
+		
+			for ( var i = 0; i < this.markers.length; i ++ )
+			{
+				var zpos = -( i * (this._axisLength/numSteps) );
+				var text = this.markers[i].children[1];
+
+				var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+				
+				text.position.x = rightOffset - 40; //?
+				text.position.y = 20;				//?
+				text.position.z = this._defaultTextSize / 2;
+				text.rotation.x = -Math.PI/2;
+				text.rotation.z = 0;	
+			}
+			
+			text = this.titleText;
+			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			text.position.x = -120;
+			text.position.z = -this._axisLength/2 - centreOffset;
+			text.rotation.x = -Math.PI/2;
+			text.rotation.z = Math.PI/2;
+		}
+		
+		p.axisToBottomView = function axisToBottomView()
+		{
+			var numSteps = this.values.numSteps;
+			this.container.rotation.z = 0;
+			
+			for ( var i = 0; i < this.markers.length; i ++ )
+			{
+				var zpos = -( i * (this._axisLength/numSteps) );
+				var text = this.markers[i].children[1];
+
+				var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+				
+				text.position.x = rightOffset - 40;
+				text.position.z = -this._defaultTextSize/2;
+				text.rotation.x = Math.PI/2;
+				text.rotation.z = 0;
+			}
+			
+			text = this.titleText;
+			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			text.position.x = -140;
+			text.position.z = -this._axisLength/2 - centreOffset;		
+			text.rotation.x = Math.PI/2;
+			text.rotation.z = Math.PI + Math.PI/2;
+		}
+
+		p.axisToRightView = function axisToRightView()
+		{
+			var numSteps = this.values.numSteps;
+			this.container.rotation.z = Math.PI/2;
+			
+			for ( var i = 0; i < this.markers.length; i ++ )
+			{
+				var zpos = -( i * (this._axisLength/numSteps) );
+				var text = this.markers[i].children[1];
+
+				var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+				
+				text.position.x = rightOffset - 40;
+				text.position.z = - this._defaultTextSize/2;
+				text.rotation.x = Math.PI/2;
+				text.rotation.z = 0;
+			}
+			
+			text = this.titleText;
+			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+			text.position.x = -140;
+			text.position.z = -this._axisLength/2 - centreOffset;		
+			text.rotation.x = Math.PI/2;
+			text.rotation.z = Math.PI + Math.PI/2;
 		}		
 	}
 })();
+
+
+
+
+
+
+
+
+
+

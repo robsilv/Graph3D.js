@@ -29,6 +29,11 @@
 			this.titleText = null;
 			this.animationValues = { lines: [], text: [], markers: [], titleText: {}, container: {} };
 			this.container = new THREE.Object3D();
+			
+			this.values = null; // graph data
+			
+			//this._updateAxesTextCallback = updateAxesTextCallback;
+			//this._updateTimeCallback = updateTimeCallback;
 		};
 		
 		p.destroy = function destroy() 
@@ -36,6 +41,7 @@
 			
 		};
 		
+		// ANIMATIONS ===========================================
 		p.updateAxis = function updateAxis()
 		{
 			if ( this.animationValues )
@@ -129,6 +135,38 @@
 			}
 		}		
 		
+		p._animateAxisText = function _animateAxisText(text, animObj, state, length, delay)
+		{
+			animObj.pX = text.position.x;
+			animObj.pY = text.position.y;
+			animObj.pZ = text.position.z;
+			animObj.rX = text.rotation.x; 
+			animObj.rY = text.rotation.y; 
+			animObj.rZ = text.rotation.z;
+			
+			var animTargObj = { pX: state.position.x,
+								pY: state.position.y, 
+								pZ: state.position.z, 
+								rX: state.rotation.x, 
+								rY: state.rotation.y, 
+								rZ: state.rotation.z }
+			
+			return this._createGraphTween(animObj, animTargObj, length, delay, this._updateAxesTextCallback);
+		}
+		p._createGraphTween = function _createGraphTween(animObj, animTargObj, length, delay, updateCallBack)
+		{
+			var graphTween = new TWEEN.Tween(animObj);
+			graphTween.to(animTargObj, length);
+			graphTween.delay(delay);
+			graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
+			graphTween.onUpdate(updateCallBack);
+			graphTween.start();
+			
+			return graphTween;
+		}		
+		
+		
+		// VALUES ===========================================
 		p.getAxisMarkerPos = function getAxisMarkerPos(step)
 		{
 			return null;

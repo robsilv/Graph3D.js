@@ -40,9 +40,21 @@ if(namespace.GraphView === undefined)
 		this.dataProvider = null;
 		this._graphUtils = GraphUtils.create();
 		
+		this._updateTimeCallback = ListenerFunctions.createListenerFunction(this, this._updateTime);
+		this._updateAxesTextCallback = ListenerFunctions.createListenerFunction(this, this._updateAxesText);
+		this._completeTimeCallback = ListenerFunctions.createListenerFunction(this, this._completeTime);		
+		
 		this._xAxisViewModel = XAxisViewModel.create(this._axisLength, this._defaultTextSize);
+		this._xAxisViewModel._updateAxesTextCallback = this._updateAxesTextCallback;
+		this._xAxisViewModel._updateTimeCallback = this._updateTimeCallback;
+			
 		this._yAxisViewModel = YAxisViewModel.create(this._axisLength, this._defaultTextSize);
+		this._yAxisViewModel._updateAxesTextCallback = this._updateAxesTextCallback;
+		this._yAxisViewModel._updateTimeCallback = this._updateTimeCallback;
+		
 		this._zAxisViewModel = ZAxisViewModel.create(this._axisLength, this._defaultTextSize);
+		this._zAxisViewModel._updateAxesTextCallback = this._updateAxesTextCallback;
+		this._zAxisViewModel._updateTimeCallback = this._updateTimeCallback;
 		
 		this._offsetTop = 0;//window.innerHeight/4*3;
 		this._offsetLeft = 0;//window.innerWidth;
@@ -170,10 +182,6 @@ if(namespace.GraphView === undefined)
 							  camPZ:this._camera.position.z};
 		this._graphValues = {rX: 0, rY: 0, rZ: 0};
 		
-		this._updateTimeCallback = ListenerFunctions.createListenerFunction(this, this._updateTime);
-		this._updateAxesTextCallback = ListenerFunctions.createListenerFunction(this, this._updateAxesText);
-		this._completeTimeCallback = ListenerFunctions.createListenerFunction(this, this._completeTime);
-		
 		document.addEventListener( 'mousedown', function(event) { scope._onDocumentMouseDown(event); }, false );
 		document.addEventListener( 'touchstart', function(event) { scope._onDocumentTouchStart(event); }, false );
 		document.addEventListener( 'touchmove', function(event) { scope._onDocumentTouchMove(event); }, false );
@@ -275,9 +283,9 @@ if(namespace.GraphView === undefined)
 		graphTween.onComplete(this._completeTimeCallback);
 		graphTween.start();		
 
-		this._xAxisToBottomView();
-		this._yAxisToDefaultView();
-		this._zAxisToBottomView();
+		this._xAxisViewModel.axisToBottomView();
+		this._yAxisViewModel.axisToDefaultView();
+		this._zAxisViewModel.axisToBottomView();
 		
 		//if (this._xAxisViewModel) 	this._graphObj.add(this._xAxisViewModel.container);
 		//if (this._yAxisViewModel) 	this._graphObj.remove(this._yAxisViewModel);
@@ -299,9 +307,9 @@ if(namespace.GraphView === undefined)
 		graphTween.onComplete(this._completeTimeCallback);
 		graphTween.start();
 		
-		this._xAxisToDefaultView();
-		this._yAxisToRightView();
-		this._zAxisToRightView();
+		this._xAxisViewModel.axisToDefaultView();
+		this._yAxisViewModel.axisToRightView();
+		this._zAxisViewModel.axisToRightView();
 		
 		//if (this._xAxisViewModel) 	this._graphObj.remove(this._xAxisViewModel.container);
 		//if (this._yAxisViewModel) 	this._graphObj.add(this._yAxisViewModel);
@@ -324,9 +332,9 @@ if(namespace.GraphView === undefined)
 		graphTween.onComplete(this._completeTimeCallback);
 		graphTween.start();
 		
-		this._xAxisToDefaultView();
-		this._yAxisToDefaultView();
-		this._zAxisToDefaultView();
+		this._xAxisViewModel.axisToDefaultView();
+		this._yAxisViewModel.axisToDefaultView();
+		this._zAxisViewModel.axisToDefaultView();
 		
 		//if (this._xAxisViewModel) 	this._graphObj.add(this._xAxisViewModel.container);
 		//if (this._yAxisViewModel) 	this._graphObj.add(this._yAxisViewModel);
@@ -348,9 +356,9 @@ if(namespace.GraphView === undefined)
 		graphTween.onComplete(this._completeTimeCallback);
 		graphTween.start();
 		
-		this._xAxisToDefaultView();
-		this._yAxisToDefaultView();
-		this._zAxisToDefaultView();
+		this._xAxisViewModel.axisToDefaultView();
+		this._yAxisViewModel.axisToDefaultView();
+		this._zAxisViewModel.axisToDefaultView();
 		
 		//if (this._xAxisViewModel) 	this._graphObj.add(this._xAxisViewModel.container);
 		//if (this._yAxisViewModel) 	this._graphObj.add(this._yAxisViewModel);
@@ -462,11 +470,11 @@ if(namespace.GraphView === undefined)
 		var zMax = 2010;//data.time.maxYear;
 		
 		// Compute X-Axis (GDP)
-		this._xAxisValues = this._graphUtils.mapToAxis(data.gdpPerCapita.minValue, data.gdpPerCapita.maxValue, numSteps);
+		this._xAxisViewModel.values = this._graphUtils.mapToAxis(data.gdpPerCapita.minValue, data.gdpPerCapita.maxValue, numSteps);
 		// Compute Y-Axis (HIV)
-		this._yAxisValues = this._graphUtils.mapToAxis(data.hivPrevalence.minValue, data.hivPrevalence.maxValue, numSteps, true);
+		this._yAxisViewModel.values = this._graphUtils.mapToAxis(data.hivPrevalence.minValue, data.hivPrevalence.maxValue, numSteps, true);
 		// Compute Z-Axis (Time)
-		this._zAxisValues = this._graphUtils.mapToAxis(zMin, zMax, numSteps, true);
+		this._zAxisViewModel.values = this._graphUtils.mapToAxis(zMin, zMax, numSteps, true);
 		
 		// RENDER
 		
@@ -497,12 +505,12 @@ if(namespace.GraphView === undefined)
 			//this._plotLine(country, color);
 		}
 		
-		//console.log("Z (Time) axis minVal "+this._zAxisValues.minVal+" maxVal "+this._zAxisValues.maxVal);
+		//console.log("Z (Time) axis minVal "+this._zAxisViewModel.values.minVal+" maxVal "+this._zAxisViewModel.values.maxVal);
 	}
 	
 	p._plotLine = function _plotLine(country, color)
 	{
-		var minYear = this._zAxisValues.minVal;
+		var minYear = this._zAxisViewModel.values.minVal;
 		
 		// massage data
 		var yearsObj = {};
@@ -566,22 +574,22 @@ if(namespace.GraphView === undefined)
 			else		prevHIVValue = hiv;
 			
 			// XPOS
-			var diffFromZero = gdp - this._xAxisValues.minVal;
-			var valueLengthOfAxis = this._xAxisValues.maxVal - this._xAxisValues.minVal;
+			var diffFromZero = gdp - this._xAxisViewModel.values.minVal;
+			var valueLengthOfAxis = this._xAxisViewModel.values.maxVal - this._xAxisViewModel.values.minVal;
 			var ratio = diffFromZero / valueLengthOfAxis;
 			
 			xpos = ratio * this._axisLength;
 			
 			// YPOS
-			var diffFromZero = hiv - this._yAxisValues.minVal;
-			var valueLengthOfAxis = this._yAxisValues.maxVal - this._yAxisValues.minVal;
+			var diffFromZero = hiv - this._yAxisViewModel.values.minVal;
+			var valueLengthOfAxis = this._yAxisViewModel.values.maxVal - this._yAxisViewModel.values.minVal;
 			var ratio = diffFromZero / valueLengthOfAxis;
 			
 			ypos = ratio * this._axisLength;			
 
 			// ZPOS
-			var diffFromZero = year - this._zAxisValues.minVal;
-			var valueLengthOfAxis = this._zAxisValues.maxVal - this._zAxisValues.minVal;
+			var diffFromZero = year - this._zAxisViewModel.values.minVal;
+			var valueLengthOfAxis = this._zAxisViewModel.values.maxVal - this._zAxisViewModel.values.minVal;
 			var ratio = diffFromZero / valueLengthOfAxis;
 			
 			zpos = -ratio * this._axisLength;
@@ -606,7 +614,7 @@ if(namespace.GraphView === undefined)
 	}
 	
 	// RENDER AXES =================================
-	
+	/*
 	p._animateAxisText = function _animateAxisText(text, animObj, state, length, delay)
 	{
 		animObj.pX = text.position.x;
@@ -625,6 +633,7 @@ if(namespace.GraphView === undefined)
 		
 		return this._createGraphTween(animObj, animTargObj, length, delay, this._updateAxesTextCallback);
 	}
+	*/
 	p._createGraphTween = function _createGraphTween(animObj, animTargObj, length, delay, updateCallBack)
 	{
 		var graphTween = new TWEEN.Tween(animObj);
@@ -670,15 +679,15 @@ if(namespace.GraphView === undefined)
 			delay += 500;		
 		}
 
-		this._renderAxis(delay, this._xAxisValues, "_xAxisObjects", "GDP Per Capita (2005 Int $)", this._xAxisViewModel);
-		this._renderAxis(delay += 500, this._yAxisValues, "_yAxisViewModel", "Estimated HIV Prevalence % (Ages 15-49)", this._yAxisViewModel);
-		this._renderAxis(delay += 500, this._zAxisValues, "_zAxisViewModel", "Time", this._zAxisViewModel);
+		this._renderAxis(delay, "GDP Per Capita (2005 Int $)", this._xAxisViewModel);
+		this._renderAxis(delay += 500, "Estimated HIV Prevalence % (Ages 15-49)", this._yAxisViewModel);
+		this._renderAxis(delay += 500, "Time", this._zAxisViewModel);
 	}
 	
-	p._renderAxis = function _renderAxis(delay, axisValuesObj, axisObjsName, title, axisViewModel)
+	p._renderAxis = function _renderAxis(delay, title, axisViewModel)
 	{
-		var axisNum = axisValuesObj.minVal;
-		var numSteps = axisValuesObj.numSteps;
+		var axisNum = axisViewModel.values.minVal;
+		var numSteps = axisViewModel.values.numSteps;
 		
 		this._graphObj.add( axisViewModel.container );	
 		
@@ -727,7 +736,7 @@ if(namespace.GraphView === undefined)
 			
 			delay += 50;
 			
-			axisNum += axisValuesObj.stepSize;
+			axisNum += axisViewModel.values.stepSize;
 		}
 		
 		var text = this._createText(title, 20);
@@ -749,258 +758,6 @@ if(namespace.GraphView === undefined)
 		
 		this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateAxesTextCallback);
 	}
-
-	
-	p._xAxisToDefaultView = function _xAxisToDefaultView(delay)
-	{
-		if (!this._xAxisViewModel || !this._xAxisValues) return;
-		
-		if (!delay) delay = 0;
-		
-		var numSteps = this._xAxisValues.numSteps;
-		//this._xAxisViewModel.container.rotation.x = 0;
-		
-		var animLength = 1000;
-		var animObj = this._xAxisViewModel.animationValues.container = { rX: this._xAxisViewModel.container.rotation.x };
-		this._createGraphTween(animObj, { rX: 0 }, animLength, delay, this._updateTimeCallback);
-		
-		delay += 1200;
-		
-		for ( var i = 0; i < this._xAxisViewModel.markers.length; i ++ )
-		{
-			var markerObj = this._xAxisViewModel.markers[i];
-			//var xpos = ( i * (this._axisLength/numSteps) );
-			var text = markerObj.children[1];
-
-			var state = {};
-			state.position = new THREE.Vector3(-10, -50, 0);
-			state.rotation = new THREE.Vector3(0, 0, Math.PI + Math.PI/2);
-			
-			//text.position = state.position;
-			//text.rotation = state.rotation;
-			
-			var animLength = 150;
-			var animObj = this._xAxisViewModel.animationValues.text[i] = {};
-			
-			this._animateAxisText( text, animObj, state, animLength, delay );
-			
-			delay += 50;
-		}
-		
-		text = this._xAxisViewModel.titleText;
-		
-		delay += 100;
-		
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		
-		state = { position: new THREE.Vector3(centreOffset + this._axisLength/2, -160, 0),
-				  rotation: new THREE.Vector3(0, 0, 0) };		
-		
-		var animLength = 500;
-		if (!this._xAxisViewModel.animationValues.titleText) {
-			this._xAxisViewModel.animationValues.titleText = {};
-		}
-		var animObj = this._xAxisViewModel.animationValues.titleText;
-		
-		this._animateAxisText( text, animObj, state, animLength, delay );
-	}
-	
-	p._yAxisToDefaultView = function _yAxisToDefaultView()
-	{
-		if (!this._yAxisViewModel || !this._yAxisValues) return;
-		
-		var numSteps = this._yAxisValues.numSteps;
-		this._yAxisViewModel.container.rotation.y = 0;
-		this._yAxisViewModel.container.rotation.y = 0;
-		
-		for ( var i = 0; i < this._yAxisViewModel.markers.length; i ++ )
-		{
-			var markerObj = this._yAxisViewModel.markers[i];
-			//var xpos = ( i * (this._axisLength/numSteps) );
-			var text = markerObj.children[1];
-
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			var state = {};
-			state.position = new THREE.Vector3(rightOffset - 40, -this._defaultTextSize/2, 0);
-			state.rotation = new THREE.Vector3(0, 0, Math.PI + Math.PI/2);
-
-			//var text = this._yAxisViewModel.children[i];		
-			
-			text.position = state.position;
-			text.rotation = state.rotation;
-			
-			//text.position.x = rightOffset - 40;
-			//text.position.y = ypos - 10;
-		}
-		
-		text = this._yAxisViewModel.titleText;
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		//text.position.x = -120;
-		//text.position.y = centreOffset + this._axisLength/2;
-		//text.rotation.z = Math.PI/2;
-		
-		state = { position: new THREE.Vector3(-120, centreOffset + this._axisLength/2, 0),
-				  rotation: new THREE.Vector3(0, 0, Math.PI/2) };
-				  
-		text.position = state.position;
-		text.rotation = state.rotation;
-	}
-	
-	p._xAxisToBottomView = function _xAxisToBottomView()
-	{
-		if (!this._xAxisViewModel) return;
-		
-		var numSteps = this._xAxisValues.numSteps;
-		
-		//this._xAxisViewModel.container.rotation.x = Math.PI + Math.PI/2;
-
-		var delay = 0;
-
-		var animLength = 1000;
-		var animObj = this._xAxisViewModel.animationValues.container = { rX: this._xAxisViewModel.container.rotation.x };
-		this._createGraphTween(animObj, { rX: Math.PI + Math.PI/2 }, animLength, delay, this._updateTimeCallback);		
-		
-		this._xMarkerTextBottom = [];
-		
-		delay += 1200;
-		
-		for ( var i = 0; i < this._xAxisViewModel.markers.length; i ++ )
-		{
-			//var xpos = ( i * (this._axisLength/numSteps) );
-			var text = this._xAxisViewModel.markers[i].children[1];
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			var state = {};
-			state.position = new THREE.Vector3(-10, rightOffset - 40, 0);
-			state.rotation = new THREE.Vector3(Math.PI, 0, Math.PI + Math.PI/2);
-			
-			if (!this._xMarkerTextBottom[i]) {
-				this._xMarkerTextBottom.push(state);
-			}
-			
-			//text.position = state.position;
-			//text.rotation = state.rotation;
-			
-			var animLength = 150;
-			var animObj = this._xAxisViewModel.animationValues.text[i] = {};
-			
-			this._animateAxisText( text, animObj, state, animLength, delay );
-			
-			delay += 50;			
-		}
-		
-		delay += 100;
-		
-		text = this._xAxisViewModel.titleText;
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		
-		state = { position: new THREE.Vector3(centreOffset + this._axisLength/2, -140, 0),
-				  rotation: new THREE.Vector3(Math.PI, 0, 0) };
-		
-		this._xMarkerTitleBottom = state;
-		
-		//text.position = this._xMarkerTitleBottom.position;
-		//text.rotation = this._xMarkerTitleBottom.rotation;	
-		
-		var animLength = 500;
-		if (!this._xAxisViewModel.animationValues.titleText) {
-			this._xAxisViewModel.animationValues.titleText = {};
-		}
-		var animObj = this._xAxisViewModel.animationValues.titleText = {};
-		this._animateAxisText( text, animObj, state, animLength, delay );		
-	}
-	
-	p._yAxisToRightView = function _yAxisToRightView()
-	{
-		if (!this._yAxisViewModel) return;
-		
-		this._yAxisViewModel.container.rotation.y = Math.PI/2;
-		this._yAxisViewModel.container.rotation.y = Math.PI/2;
-	}	
-
-	p._zAxisToDefaultView = function _zAxisToDefaultView()
-	{
-		if (!this._zAxisViewModel || !this._zAxisValues) return;
-		
-		var numSteps = this._zAxisValues.numSteps;
-		this._zAxisViewModel.container.rotation.z = 0;
-	
-		for ( var i = 0; i < this._zAxisViewModel.markers.length; i ++ )
-		{
-			var zpos = -( i * (this._axisLength/numSteps) );
-			var text = this._zAxisViewModel.markers[i].children[1];
-
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			text.position.x = rightOffset - 40; //?
-			text.position.y = 20;				//?
-			text.position.z = this._defaultTextSize / 2;
-			text.rotation.x = -Math.PI/2;
-			text.rotation.z = 0;	
-		}
-		
-		text = this._zAxisViewModel.titleText;
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		text.position.x = -120;
-		text.position.z = -this._axisLength/2 - centreOffset;
-		text.rotation.x = -Math.PI/2;
-		text.rotation.z = Math.PI/2;
-	}
-	p._zAxisToRightView = function _zAxisToRightView()
-	{
-		if (!this._zAxisViewModel) return;
-		
-		var numSteps = this._zAxisValues.numSteps;
-		this._zAxisViewModel.container.rotation.z = Math.PI/2;
-		
-		for ( var i = 0; i < this._zAxisViewModel.markers.length; i ++ )
-		{
-			var zpos = -( i * (this._axisLength/numSteps) );
-			var text = this._zAxisViewModel.markers[i].children[1];
-
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			text.position.x = rightOffset - 40;
-			text.position.z = - this._defaultTextSize/2;
-			text.rotation.x = Math.PI/2;
-			text.rotation.z = 0;
-		}
-		
-		text = this._zAxisViewModel.titleText;
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		text.position.x = -140;
-		text.position.z = -this._axisLength/2 - centreOffset;		
-		text.rotation.x = Math.PI/2;
-		text.rotation.z = Math.PI + Math.PI/2;
-	}
-	p._zAxisToBottomView = function _zAxisToBottomView()
-	{
-		if (!this._zAxisViewModel) return;
-		
-		var numSteps = this._zAxisValues.numSteps;
-		this._zAxisViewModel.container.rotation.z = 0;
-		
-		for ( var i = 0; i < this._zAxisViewModel.markers.length; i ++ )
-		{
-			var zpos = -( i * (this._axisLength/numSteps) );
-			var text = this._zAxisViewModel.markers[i].children[1];
-
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			text.position.x = rightOffset - 40;
-			text.position.z = -this._defaultTextSize/2;
-			text.rotation.x = Math.PI/2;
-			text.rotation.z = 0;
-		}
-		
-		text = this._zAxisViewModel.titleText;
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		text.position.x = -140;
-		text.position.z = -this._axisLength/2 - centreOffset;		
-		text.rotation.x = Math.PI/2;
-		text.rotation.z = Math.PI + Math.PI/2;
-	}	
 	
 	// RENDER GRIDS =========================================
 	p._renderGridXY = function _renderGridXY()
@@ -1009,7 +766,7 @@ if(namespace.GraphView === undefined)
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 		geometry.vertices.push( new THREE.Vector3( 0, this._axisLength, 0 ) );
 		
-		var numSteps = this._xAxisValues.numSteps;
+		var numSteps = this._xAxisViewModel.values.numSteps;
 		var stepSize = this._axisLength / numSteps;
 		
 		// Render X lines (Up)
@@ -1025,7 +782,7 @@ if(namespace.GraphView === undefined)
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0,  0 ) );
 		
-		var numSteps = this._yAxisValues.numSteps;
+		var numSteps = this._yAxisViewModel.values.numSteps;
 		var stepSize = this._axisLength / numSteps;	
 		
 		// Render Y lines (Across)
@@ -1044,7 +801,7 @@ if(namespace.GraphView === undefined)
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 		geometry.vertices.push( new THREE.Vector3( 0, 0, this._axisLength ) );
 		
-		var numSteps = this._yAxisValues.numSteps;
+		var numSteps = this._yAxisViewModel.values.numSteps;
 		var stepSize = this._axisLength / numSteps;
 		
 		// Render Y lines (Across)
@@ -1060,7 +817,7 @@ if(namespace.GraphView === undefined)
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 		geometry.vertices.push( new THREE.Vector3( 0, this._axisLength, 0 ) );
 		
-		var numSteps = this._zAxisValues.numSteps;
+		var numSteps = this._zAxisViewModel.values.numSteps;
 		var stepSize = this._axisLength / numSteps;	
 		
 		// Render Z lines (Up)
@@ -1078,7 +835,7 @@ if(namespace.GraphView === undefined)
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 		geometry.vertices.push( new THREE.Vector3( 0, 0, this._axisLength ) );
 
-		var numSteps = this._xAxisValues.numSteps;
+		var numSteps = this._xAxisViewModel.values.numSteps;
 		var stepSize = this._axisLength / numSteps;
 		
 		// Render X lines (Front/Back)
@@ -1094,7 +851,7 @@ if(namespace.GraphView === undefined)
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0, 0 ) );
 		
-		var numSteps = this._zAxisValues.numSteps;
+		var numSteps = this._zAxisViewModel.values.numSteps;
 		var stepSize = this._axisLength / numSteps;		
 		
 		// Render Z lines (Left/Right)

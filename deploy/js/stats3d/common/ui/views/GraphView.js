@@ -4,6 +4,7 @@ var namespace = STATS3D.namespace("STATS3D.common.ui.views");
 var GraphUtils = STATS3D.namespace("STATS3D.common.data").GraphUtils;
 var XAxisViewModel = STATS3D.namespace("STATS3D.common.data").XAxisViewModel;
 var YAxisViewModel = STATS3D.namespace("STATS3D.common.data").YAxisViewModel;
+var ZAxisViewModel = STATS3D.namespace("STATS3D.common.data").ZAxisViewModel;
 var ListenerFunctions = STATS3D.namespace("STATS3D.utils.events").ListenerFunctions;
 
 //var EventDispatcher = STATS3D.namespace("STATS3D.utils.events").EventDispatcher;
@@ -41,6 +42,7 @@ if(namespace.GraphView === undefined)
 		
 		this._xAxisViewModel = XAxisViewModel.create(this._axisLength, this._defaultTextSize);
 		this._yAxisViewModel = YAxisViewModel.create(this._axisLength, this._defaultTextSize);
+		this._zAxisViewModel = ZAxisViewModel.create(this._axisLength, this._defaultTextSize);
 		
 		this._offsetTop = 0;//window.innerHeight/4*3;
 		this._offsetLeft = 0;//window.innerWidth;
@@ -279,7 +281,7 @@ if(namespace.GraphView === undefined)
 		
 		//if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
 		//if (this._yAxisObjects) 	this._graphObj.remove(this._yAxisObjects);
-		//if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
+		//if (this._zAxisObjects) 	this._graphObj.add(this._zAxisObjects);
 	}
 	
 	p.toRightView = function toRightView()
@@ -303,7 +305,7 @@ if(namespace.GraphView === undefined)
 		
 		//if (this._xAxisObjects) 	this._graphObj.remove(this._xAxisObjects.container);
 		//if (this._yAxisObjects) 	this._graphObj.add(this._yAxisObjects);
-		//if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
+		//if (this._zAxisObjects) 	this._graphObj.add(this._zAxisObjects);
 	}
 	
 	p.toFrontView = function toFrontView()
@@ -328,7 +330,7 @@ if(namespace.GraphView === undefined)
 		
 		//if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
 		//if (this._yAxisObjects) 	this._graphObj.add(this._yAxisObjects);
-		//if (this._zAxisTextObj) 	this._graphObj.remove(this._zAxisTextObj);
+		//if (this._zAxisObjects) 	this._graphObj.remove(this._zAxisObjects);
 	}
 	
 	p.toOverView = function toOverView()
@@ -352,7 +354,7 @@ if(namespace.GraphView === undefined)
 		
 		//if (this._xAxisObjects) 	this._graphObj.add(this._xAxisObjects.container);
 		//if (this._yAxisObjects) 	this._graphObj.add(this._yAxisObjects);
-		//if (this._zAxisTextObj) 	this._graphObj.add(this._zAxisTextObj);
+		//if (this._zAxisObjects) 	this._graphObj.add(this._zAxisObjects);
 	}
 	
 	p._updateTime = function _updateTime() 
@@ -392,7 +394,7 @@ if(namespace.GraphView === undefined)
 		
 		this._updateAxis(this._xAxisObjects);
 		this._updateAxis(this._yAxisObjects);
-		
+		this._updateAxis(this._zAxisObjects);
 	};
 	
 	p._updateAxis = function _updateAxis(axisObj)
@@ -426,6 +428,16 @@ if(namespace.GraphView === undefined)
 						vector3.x = markers[i].yAxisLength;
 						line.geometry.verticesNeedUpdate = true;
 					}
+					/*
+					// Markers on the Z-Axis are lines along the X
+					if (!isNaN(markers[i].yAxisLength)) 
+					{
+						var line = markerObj.children[0];
+						var vector3 = line.geometry.vertices[0];					
+						vector3.x = markers[i].yAxisLength;
+						line.geometry.verticesNeedUpdate = true;
+					}
+					*/
 					
 					var text = markerObj.children[1];
 					if (!isNaN(markers[i].opacity))		text.children[0].material.opacity = markers[i].opacity;
@@ -446,7 +458,7 @@ if(namespace.GraphView === undefined)
 	{
 		this._updateAxisText(this._xAxisObjects);
 		this._updateAxisText(this._yAxisObjects);
-		//this._updateAxisText(this._zAxisObjects);
+		this._updateAxisText(this._zAxisObjects);
 	}
 	p._updateAxisText = function _updateAxisText(axisObj)
 	{
@@ -752,7 +764,7 @@ if(namespace.GraphView === undefined)
 
 		this._renderAxis(delay, this._xAxisValues, "_xAxisObjects", "GDP Per Capita (2005 Int $)", this._xAxisViewModel);
 		this._renderAxis(delay += 500, this._yAxisValues, "_yAxisObjects", "Estimated HIV Prevalence % (Ages 15-49)", this._yAxisViewModel);
-		//this._renderZAxis();
+		this._renderAxis(delay += 500, this._zAxisValues, "_zAxisObjects", "Time", this._zAxisViewModel);
 	}
 	
 	p._renderAxis = function _renderAxis(delay, axisValuesObj, axisObjsName, title, axisViewModel)
@@ -1000,67 +1012,29 @@ if(namespace.GraphView === undefined)
 		this._yAxisObjects.container.rotation.y = Math.PI/2;
 		this._yAxisObjects.container.rotation.y = Math.PI/2;
 	}	
-	
-	p._renderZAxis = function _renderZAxis()
-	{
-		// draw Z-Axis lines
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( -20, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		
-		var axisNum = this._zAxisValues.minVal;
-		var numSteps = this._zAxisValues.numSteps;
-		
-		this._zAxisTextObj = new THREE.Object3D();
-		this._graphObj.add( this._zAxisTextObj );
-		
-		this._zAxisLinesObj = new THREE.Object3D();
-		this._graphObj.add( this._zAxisLinesObj );
-		
-		for ( var i = 0; i <= numSteps; i ++ )
-		{
-			var zpos = -( i * (this._axisLength/numSteps) );
-		
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.z = zpos;
-			this._zAxisLinesObj.add( line );
-			
-			var text = this._createText(axisNum.toString());
-			this._zAxisTextObj.add( text );
-			
-			axisNum += this._zAxisValues.stepSize;
-		}
-		
-		var title = "Time";
-		var text = this._createText(title, 20);
-		this._zAxisTitle = text;
-		this._zAxisTextObj.add( text );
-		
-		this._zAxisToDefaultView();
-	}
+
 	p._zAxisToDefaultView = function _zAxisToDefaultView()
 	{
-		if (!this._zAxisTextObj) return;
+		if (!this._zAxisObjects) return;
 		
 		var numSteps = this._zAxisValues.numSteps;
-		this._zAxisTextObj.rotation.z = 0;
-		this._zAxisLinesObj.rotation.z = 0;
+		this._zAxisObjects.container.rotation.z = 0;
 	
-		for ( var i = 0; i < this._zAxisTextObj.children.length; i ++ )
+		for ( var i = 0; i < this._zAxisObjects.markers.length; i ++ )
 		{
 			var zpos = -( i * (this._axisLength/numSteps) );
-			var text = this._zAxisTextObj.children[i];
+			var text = this._zAxisObjects.markers[i].children[1];
 
 			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 			
-			text.position.x = rightOffset - 40;
-			text.position.y = 20;
-			text.position.z = zpos + 10;
+			text.position.x = rightOffset - 40; //?
+			text.position.y = 20;				//?
+			text.position.z = this._defaultTextSize / 2;
 			text.rotation.x = -Math.PI/2;
 			text.rotation.z = 0;	
 		}
 		
-		text = this._zAxisTitle;
+		text = this._zAxisObjects.titleText;
 		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 		text.position.x = -120;
 		text.position.z = -this._axisLength/2 - centreOffset;
@@ -1069,26 +1043,25 @@ if(namespace.GraphView === undefined)
 	}
 	p._zAxisToRightView = function _zAxisToRightView()
 	{
-		if (!this._zAxisTextObj) return;
+		if (!this._zAxisObjects) return;
 		
 		var numSteps = this._zAxisValues.numSteps;
-		this._zAxisTextObj.rotation.z = Math.PI/2;
-		this._zAxisLinesObj.rotation.z = Math.PI/2;
+		this._zAxisObjects.container.rotation.z = Math.PI/2;
 		
-		for ( var i = 0; i < this._zAxisTextObj.children.length; i ++ )
+		for ( var i = 0; i < this._zAxisObjects.markers.length; i ++ )
 		{
 			var zpos = -( i * (this._axisLength/numSteps) );
-			var text = this._zAxisTextObj.children[i];
+			var text = this._zAxisObjects.markers[i].children[1];
 
 			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 			
 			text.position.x = rightOffset - 40;
-			text.position.z = zpos - 10;
+			text.position.z = - this._defaultTextSize/2;
 			text.rotation.x = Math.PI/2;
 			text.rotation.z = 0;
 		}
 		
-		text = this._zAxisTitle;
+		text = this._zAxisObjects.titleText;
 		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 		text.position.x = -140;
 		text.position.z = -this._axisLength/2 - centreOffset;		
@@ -1097,26 +1070,25 @@ if(namespace.GraphView === undefined)
 	}
 	p._zAxisToBottomView = function _zAxisToBottomView()
 	{
-		if (!this._zAxisTextObj) return;
+		if (!this._zAxisObjects) return;
 		
 		var numSteps = this._zAxisValues.numSteps;
-		this._zAxisTextObj.rotation.z = 0;
-		this._zAxisLinesObj.rotation.z = 0;
+		this._zAxisObjects.container.rotation.z = 0;
 		
-		for ( var i = 0; i < this._zAxisTextObj.children.length; i ++ )
+		for ( var i = 0; i < this._zAxisObjects.markers.length; i ++ )
 		{
 			var zpos = -( i * (this._axisLength/numSteps) );
-			var text = this._zAxisTextObj.children[i];
+			var text = this._zAxisObjects.markers[i].children[1];
 
 			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 			
 			text.position.x = rightOffset - 40;
-			text.position.z = zpos - 10;
+			text.position.z = -this._defaultTextSize/2;
 			text.rotation.x = Math.PI/2;
 			text.rotation.z = 0;
 		}
 		
-		text = this._zAxisTitle;
+		text = this._zAxisObjects.titleText;
 		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 		text.position.x = -140;
 		text.position.z = -this._axisLength/2 - centreOffset;		

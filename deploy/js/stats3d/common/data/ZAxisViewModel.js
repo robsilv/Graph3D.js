@@ -32,13 +32,13 @@
 		
 		p.getAxisMarkerPos = function getAxisMarkerPos(step)
 		{
-			return new THREE.Vector3(0, step, 0 );
+			return new THREE.Vector3(0, 0, -step );
 		}
 		p.getMarkerInitState = function getMarkerInitState(text)
 		{
 		    var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
     
-			return { position: new THREE.Vector3(rightOffset - 40, -this._defaultTextSize/2, 0), rotation: new THREE.Vector3(0, 0, 0) };
+			return { position: new THREE.Vector3(rightOffset - 40, 20, this._defaultTextSize/2), rotation: new THREE.Vector3(-Math.PI/2, 0, 0) };
 		}
 		p.getMarkerInitAnimValues = function getMarkerInitAnimValues()
 		{
@@ -52,8 +52,8 @@
 		{
 			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
   
-			var state = { position: new THREE.Vector3(-120, centreOffset + this._axisLength/2, 0),
-						  rotation: new THREE.Vector3(0, 0, Math.PI/2) };
+			var state = { position: new THREE.Vector3(-120, 0, -this._axisLength/2 - centreOffset),
+						  rotation: new THREE.Vector3(-Math.PI/2, 0, Math.PI/2) };
 
 			return state;
 		}

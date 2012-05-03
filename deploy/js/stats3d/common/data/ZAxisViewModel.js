@@ -94,8 +94,8 @@
 		p._getTitleInitAnimValues = function getTitleInitAnimValues(state)
 		{
 			var obj = { animLength: 1000,
-						animObj: { pY:state.position.y-150 , opacity: 0 },
-						targObj: { pY:state.position.y, opacity: 1 } };
+						animObj: { pZ:state.position.z-150 , opacity: 0 },
+						targObj: { pZ:state.position.z, opacity: 1 } };
 			
 			return obj;
 		}

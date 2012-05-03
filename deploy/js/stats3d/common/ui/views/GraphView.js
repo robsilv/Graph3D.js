@@ -486,30 +486,34 @@ if(namespace.GraphView === undefined)
 		//this._renderGridXY();
 		//this._renderGridXZ();
 		//this._renderGridYZ();
+		//this._plotData();
 		
-		
+		//console.log("Z (Time) axis minVal "+this._zAxisViewModel.values.minVal+" maxVal "+this._zAxisViewModel.values.maxVal);
+	}
+	
+	p._plotData = function _plotData()
+	{
 		// draw line for country
 		//this._plotData(data.countries["Lesotho"]);
 		var regionColors = [0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0x00FFFF, 0xFF00FF];
+		this._regionColors = {};
 		for ( var i = 0; i < data.regions.length; i ++ )
 		{
 			var region = data.regions[i];
 			var color = new THREE.Color();
 			//color.setHSV(Math.random(), 1.0, 1.0);
 			color.setHex(regionColors[i]);
-			region.color = color;
+			this._regionColors[region.name] = color;
 		}
 		
 		for ( var countryName in data.countries ) 
 		{
 			var country = data.countries[countryName];
-			color = country.region.color;
+			color = this._regionColors[country.region.name];
 			//var color = new THREE.Color();
 			//color.setHSV(Math.random(), 1.0, 1.0);
-			//this._plotLine(country, color);
-		}
-		
-		//console.log("Z (Time) axis minVal "+this._zAxisViewModel.values.minVal+" maxVal "+this._zAxisViewModel.values.maxVal);
+			this._plotLine(country, color);
+		}	
 	}
 	
 	p._plotLine = function _plotLine(country, color)

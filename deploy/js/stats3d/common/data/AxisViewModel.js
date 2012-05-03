@@ -49,8 +49,6 @@
 			
 			graphObj.add( this.container );	
 			
-			this.markerTextDefaults = [];
-			
 			for ( var i = 0; i <= numSteps; i ++ )
 			{
 				var geometry = new THREE.Geometry();
@@ -72,10 +70,6 @@
 				text.children[0].material.opacity = 0;
 				
 				var state = this._getMarkerInitState(text);
-				
-				if (!this.markerTextDefaults[i]) {
-					this.markerTextDefaults.push(state);
-				}
 				
 				text.position = state.position;
 				text.rotation = state.rotation;
@@ -159,6 +153,11 @@
 		
 		p.axisToDefaultView = function axisToDefaultView()
 		{
+			this._gotoAxisView("Init");
+		}
+		
+		p._gotoAxisView = function _gotoAxisView(name)
+		{
 			if (!this.values) return;
 			
 			var delay = 0;
@@ -166,17 +165,17 @@
 			var numSteps = this.values.numSteps;
 			//this.container.rotation.x = 0;
 			
-			var animLength = 1000;
-			var animObj = this.animationValues.container = { rX: this.container.rotation.x, rY: this.container.rotation.y, rZ: this.container.rotation.z };
-			this._createGraphTween(animObj, { rX: 0, rY: 0, rZ: 0 }, animLength, delay, this._updateTimeCallback);
-			
+			var animInitObj = this["_get"+name+"AxisAnimValues"]();
+			this.animationValues.container = animInitObj.animObj;
+			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateTimeCallback);
+
 			delay += 1200;
 			
 			for ( var i = 0; i < this.markers.length; i ++ )
 			{
 				var text = this.markers[i].children[1];
 
-				var state = this._getMarkerInitState(text);
+				var state = this["_getMarker"+name+"State"](text);
 
 				//text.position = state.position;
 				//text.rotation = state.rotation;
@@ -186,14 +185,14 @@
 				
 				this._animateAxisText( text, animObj, state, animLength, delay );
 				
-				delay += 50;
+				delay += 25;
 			}
 			
 			text = this.titleText;
 			
-			delay += 100;
+			delay = 800;
 
-			state = this._getTitleInitState(text);
+			state = this["_getTitle"+name+"State"](text);
 			
 			//text.position = state.position;
 			//text.rotation = state.rotation;
@@ -205,7 +204,7 @@
 			var animObj = this.animationValues.titleText;
 			
 			this._animateAxisText( text, animObj, state, animLength, delay );
-		}		
+		}
 		
 		p.updateAxis = function updateAxis()
 		{
@@ -352,9 +351,13 @@
 		{
 			return null;
 		};
-		p._getDefaultAxisAnimValues = function _getDefaultAxisAnimValues()
+		p._getInitAxisAnimValues = function _getInitAxisAnimValues()
 		{
-			return null;
+			var obj = { animLength: 1000,
+						animObj: { rX: this.container.rotation.x, rY: this.container.rotation.y, rZ: this.container.rotation.z },
+						targObj: { rX: 0, rY: 0, rZ: 0 } };
+			
+			return obj;
 		};
 	}
 })();

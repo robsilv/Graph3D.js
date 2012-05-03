@@ -66,16 +66,15 @@
 			
 			return obj;
 		}
-		/*
-		p._getDefaultAxisAnimValues = function _getDefaultAxisAnimValues()
+
+		p._getRightAxisAnimValues = function _getRightAxisAnimValues()
 		{
 			var obj = { animLength: 1000,
 						animObj: { rY: this.container.rotation.y },
-						targObj: { rY: 0 } };
+						targObj: { rY: Math.PI/2 } };
 			
 			return obj;
 		};
-		*/
 		
 		// ANIMATIONS ========================================
 
@@ -83,9 +82,10 @@
 		{
 			//this.container.rotation.y = Math.PI/2;
 			var delay = 0;
-			var animLength = 1000;
-			var animObj = this.animationValues.container = { rY: this.container.rotation.y };
-			this._createGraphTween(animObj, { rY: Math.PI/2 }, animLength, delay, this._updateTimeCallback);
+			
+			var animInitObj = this._getRightAxisAnimValues();
+			this.animationValues.container = animInitObj.animObj;
+			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateTimeCallback);
 		}		
 	}
 })();

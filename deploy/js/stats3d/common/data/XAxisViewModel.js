@@ -81,64 +81,21 @@
 			
 			return obj;
 		}
-		/*
-		p._getDefaultAxisAnimValues = function _getDefaultAxisAnimValues()
+		
+		p._getBottomAxisAnimValues = function _getDefaultAxisAnimValues()
 		{
 			var obj = { animLength: 1000,
 						animObj: { rX: this.container.rotation.x },
-						targObj: { rX: 0 } };
+						targObj: { rX: Math.PI + Math.PI/2 } };
 			
 			return obj;
 		};
-		*/
 		
 		// ANIMATIONS ========================================================
 
 		p.axisToBottomView = function axisToBottomView()
 		{
-			var numSteps = this.values.numSteps;
-			var delay = 0;
-			
-			//this.container.rotation.x = Math.PI + Math.PI/2;
-
-			var animLength = 1000;
-			var animObj = this.animationValues.container = { rX: this.container.rotation.x };
-			this._createGraphTween(animObj, { rX: Math.PI + Math.PI/2 }, animLength, delay, this._updateTimeCallback);		
-			
-			delay += 1200;
-			
-			for ( var i = 0; i < this.markers.length; i ++ )
-			{
-				var text = this.markers[i].children[1];
-
-				var state = this._getMarkerBottomState(text);
-				
-				//text.position = state.position;
-				//text.rotation = state.rotation;
-				
-				var animLength = 150;
-				var animObj = this.animationValues.text[i] = {};
-				
-				this._animateAxisText( text, animObj, state, animLength, delay );
-				
-				delay += 50;			
-			}
-			
-			delay += 100;
-			
-			text = this.titleText;
-
-			state = this._getTitleBottomState(text);
-
-			//text.position = state.position;
-			//text.rotation = state.rotation;	
-			
-			var animLength = 500;
-			if (!this.animationValues.titleText) {
-				this.animationValues.titleText = {};
-			}
-			var animObj = this.animationValues.titleText = {};
-			this._animateAxisText( text, animObj, state, animLength, delay );		
+			this._gotoAxisView("Bottom");
 		}		
 	}
 })();

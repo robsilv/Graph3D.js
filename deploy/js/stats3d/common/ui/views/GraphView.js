@@ -3,6 +3,7 @@
 var namespace = STATS3D.namespace("STATS3D.common.ui.views");
 var GraphUtils = STATS3D.namespace("STATS3D.common.data").GraphUtils;
 var XAxisViewModel = STATS3D.namespace("STATS3D.common.data").XAxisViewModel;
+var YAxisViewModel = STATS3D.namespace("STATS3D.common.data").YAxisViewModel;
 var ListenerFunctions = STATS3D.namespace("STATS3D.utils.events").ListenerFunctions;
 
 //var EventDispatcher = STATS3D.namespace("STATS3D.utils.events").EventDispatcher;
@@ -39,6 +40,7 @@ if(namespace.GraphView === undefined)
 		this._graphUtils = GraphUtils.create();
 		
 		this._xAxisViewModel = XAxisViewModel.create(this._axisLength, this._defaultTextSize);
+		this._yAxisViewModel = YAxisViewModel.create(this._axisLength, this._defaultTextSize);
 		
 		this._offsetTop = 0;//window.innerHeight/4*3;
 		this._offsetLeft = 0;//window.innerWidth;
@@ -748,24 +750,21 @@ if(namespace.GraphView === undefined)
 			delay += 500;		
 		}
 
-		this._renderXAxis(delay, this._xAxisValues, "_xAxisObjects", "GDP Per Capita (2005 Int $)", this._xAxisViewModel);
-		this._renderYAxis(delay += 500, this._yAxisValues, "_yAxisObjects", "Estimated HIV Prevalence % (Ages 15-49)");
+		this._renderAxis(delay, this._xAxisValues, "_xAxisObjects", "GDP Per Capita (2005 Int $)", this._xAxisViewModel);
+		this._renderAxis(delay += 500, this._yAxisValues, "_yAxisObjects", "Estimated HIV Prevalence % (Ages 15-49)", this._yAxisViewModel);
 		//this._renderZAxis();
 	}
 	
-	p._renderXAxis = function _renderXAxis(delay, axisValuesObj, axisObjsName, title, axisData)
+	p._renderAxis = function _renderAxis(delay, axisValuesObj, axisObjsName, title, axisViewModel)
 	{
 		var axisNum = axisValuesObj.minVal;
 		var numSteps = axisValuesObj.numSteps;
 
-		// add to XAxisData
-		var axisObjects = this[axisObjsName] = { lines: [], text: [], markers: [], titleText: null,
-												 animationValues: { lines: [], text: [], markers: [], titleText: {}, container: {} },
-												 container: new THREE.Object3D() };
+		this[axisObjsName] = axisViewModel;
 
-		this._graphObj.add( axisObjects.container );	
+		this._graphObj.add( axisViewModel.container );	
 		
-		axisObjects.markerTextDefaults = [];
+		axisViewModel.markerTextDefaults = [];
 		
 		for ( var i = 0; i <= numSteps; i ++ )
 		{
@@ -774,37 +773,37 @@ if(namespace.GraphView === undefined)
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 		
 			var markerObj = new THREE.Object3D();
-			axisObjects.container.add( markerObj );
-			axisObjects.markers.push( markerObj );
+			axisViewModel.container.add( markerObj );
+			axisViewModel.markers.push( markerObj );
 			
-			markerObj.position = axisData.getAxisMarkerPos(i * (this._axisLength/numSteps));
+			markerObj.position = axisViewModel.getAxisMarkerPos(i * (this._axisLength/numSteps));
 			
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 1 } ) );
 			
 			markerObj.add( line );
-			axisObjects.lines.push(line);
+			axisViewModel.lines.push(line);
 
 			var text = this._createText(axisNum.toString());
 			text.children[0].material.opacity = 0;
 			
-			var state = axisData.getMarkerInitState();
+			var state = axisViewModel.getMarkerInitState(text);
 			
-			if (!axisObjects.markerTextDefaults[i]) {
-				axisObjects.markerTextDefaults.push(state);
+			if (!axisViewModel.markerTextDefaults[i]) {
+				axisViewModel.markerTextDefaults.push(state);
 			}
 			
 			text.position = state.position;
 			text.rotation = state.rotation;
 			
 			markerObj.add( text );
-			axisObjects.text.push(text);
+			axisViewModel.text.push(text);
 			
 			// Set animation values to tween in marker objects (containing text and marker line for point on axis)
-			//var animVal = axisObjects.animationValues.markers[i];
+			//var animVal = axisViewModel.animationValues.markers[i];
 
 			// Begin tween for marker objects
-			var animInitObj = axisData.getMarkerInitAnimValues();
-			axisObjects.animationValues.markers[i] = animInitObj.animObj;
+			var animInitObj = axisViewModel.getMarkerInitAnimValues();
+			axisViewModel.animationValues.markers[i] = animInitObj.animObj;
 			
 			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateTimeCallback);
 			
@@ -815,114 +814,24 @@ if(namespace.GraphView === undefined)
 		
 		var text = this._createText(title, 20);
 		
-		state = axisData.getTitleInitState(text);
+		state = axisViewModel.getTitleInitState(text);
 		
-		axisObjects.markerTitleDefault = state;
+		axisViewModel.markerTitleDefault = state;
 		
-		text.position = axisObjects.markerTitleDefault.position;
-		text.rotation = axisObjects.markerTitleDefault.rotation;
+		text.position = axisViewModel.markerTitleDefault.position;
+		text.rotation = axisViewModel.markerTitleDefault.rotation;
 		
-		axisObjects.container.add( text );
-		axisObjects.titleText = text;
+		axisViewModel.container.add( text );
+		axisViewModel.titleText = text;
 		
 		text.children[0].material.opacity = 0;
 		
-		var animInitObj = axisData.getTitleInitAnimValues(state);
-		axisObjects.animationValues.titleText = animInitObj.animObj;
+		var animInitObj = axisViewModel.getTitleInitAnimValues(state);
+		axisViewModel.animationValues.titleText = animInitObj.animObj;
 		
 		this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateAxesTextCallback);
 	}
-	
-	p._renderYAxis = function _renderYAxis(delay, axisValuesObj, axisObjsName, title)
-	{
-		var axisNum = axisValuesObj.minVal;
-		var numSteps = axisValuesObj.numSteps;
 
-		var axisObjects = this[axisObjsName] = { lines: [], text: [], markers: [], titleText: null,
-												 animationValues: { lines: [], text: [], markers: [], titleText: {}, container: {} },
-												 container: new THREE.Object3D() };
-
-		this._graphObj.add( axisObjects.container );	
-		
-		axisObjects.markerTextDefaults = [];
-
-		for ( var i = 0; i <= numSteps; i ++ )
-		{
-			var pos = new THREE.Vector3(0, i * (this._axisLength/numSteps), 0 );
-			
-			var geometry = new THREE.Geometry();
-			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		
-			var markerObj = new THREE.Object3D();
-			axisObjects.container.add( markerObj );
-			axisObjects.markers.push( markerObj );
-			
-			markerObj.position = pos;
-			
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 1 } ) );
-			
-			markerObj.add( line );
-			axisObjects.lines.push(line);
-
-			var text = this._createText(axisNum.toString());
-			text.children[0].material.opacity = 0;
-
-			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-			
-			var state = {};
-			state.position = new THREE.Vector3(rightOffset - 40, -this._defaultTextSize/2, 0);
-			state.rotation = new THREE.Vector3(0, 0, 0);
-			
-			if (!axisObjects.markerTextDefaults[i]) {
-				axisObjects.markerTextDefaults.push(state);
-			}
-			
-			text.position = state.position;
-			text.rotation = state.rotation;
-			
-			markerObj.add( text );
-			axisObjects.text.push(text);
-			
-			// Set animation values to tween in marker objects (containing text and marker line for point on axis)
-			//var animVal = this._xAxisObjects.animationValues.markers[i];
-
-			// Begin tween for marker objects
-			var animLength = 150;
-			var animObj = axisObjects.animationValues.markers[i] = { rX:Math.PI/2, opacity: 0, yAxisLength:0 };
-			var targObj = {rX: 0, opacity: 1, yAxisLength: -20};
-			this._createGraphTween(animObj, targObj, animLength, delay, this._updateTimeCallback);
-			
-			delay += 50;			
-
-			axisNum += axisValuesObj.stepSize;
-		}
-		
-		var text = this._createText(title, 20);
-		
-		var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
-		
-		state = { position: new THREE.Vector3(-120, centreOffset + this._axisLength/2, 0),
-				  rotation: new THREE.Vector3(0, 0, Math.PI/2) };
-		
-		axisObjects.markerTitleDefault = state;
-		
-		text.position = axisObjects.markerTitleDefault.position;
-		text.rotation = axisObjects.markerTitleDefault.rotation;
-		
-		axisObjects.container.add( text );
-		axisObjects.titleText = text;
-		
-		text.children[0].material.opacity = 0;
-		
-		var animLength = 1000;
-		
-		var animObj = axisObjects.animationValues.titleText = { pY:state.position.y-150 , opacity: 0 };
-		var targObj = { pY:state.position.y, opacity: 1 };
-		this._createGraphTween(animObj, targObj, animLength, delay, this._updateAxesTextCallback);
-		
-		//this._yAxisToDefaultView();
-	}	
 	
 	p._xAxisToDefaultView = function _xAxisToDefaultView(delay)
 	{

@@ -41,6 +41,14 @@
     
 			return { position: new THREE.Vector3(rightOffset - 40, -this._defaultTextSize/2, 0), rotation: new THREE.Vector3(0, 0, 0) };
 		}
+		p._getMarkerBottomState = function _getMarkerBottomState(text)
+		{
+		    var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+    
+			return { position: new THREE.Vector3(rightOffset - 40, this._defaultTextSize/2, 0), rotation: new THREE.Vector3(Math.PI, 0, 0) };
+		}
+		
+		
 		p._getMarkerInitAnimValues = function _getMarkerInitAnimValues()
 		{
 			var obj = { animLength: 150,
@@ -55,6 +63,15 @@
   
 			var state = { position: new THREE.Vector3(-120, centreOffset + this._axisLength/2, 0),
 						  rotation: new THREE.Vector3(0, 0, Math.PI/2) };
+
+			return state;
+		}
+		p._getTitleBottomState = function _getTitleBottomState(text)
+		{
+			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
+  
+			var state = { position: new THREE.Vector3(-120, centreOffset + this._axisLength/2, 0),
+						  rotation: new THREE.Vector3(0, Math.PI, Math.PI/2) };
 
 			return state;
 		}
@@ -91,12 +108,18 @@
 
 		p.axisToRightView = function axisToRightView()
 		{
+			/*
 			//this.container.rotation.y = Math.PI/2;
 			var delay = 1000;
 			
 			var animInitObj = this._getRightAxisAnimValues();
 			this.animationValues.container = animInitObj.animObj;
 			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateTimeCallback);
+			*/
+			var scope = this;
+			this._gotoAxisView( function() { return scope._getRightAxisAnimValues(); },
+								function(text) { return scope._getTextInitAnimValues(text, scope._getMarkerInitState(text)); }, 
+								function(text) { return scope._getTitleInitState(text); } );
 		}
 
 		p.axisToBottomView = function axisToBottomView()
@@ -104,8 +127,8 @@
 			var scope = this;
 			this._gotoAxisView( function() { return scope._getInitAxisAnimValues(); },
 								//function(text) { return scope._getMarkerInitState(text); },
-								function(text) { return scope._getTextInitAnimValues(text, scope._getMarkerInitState(text)); }, 
-								function(text) { return scope._getTitleInitState(text); } );
+								function(text) { return scope._getTextInitAnimValues(text, scope._getMarkerBottomState(text)); }, 
+								function(text) { return scope._getTitleBottomState(text); } );
 		}			
 	}
 })();

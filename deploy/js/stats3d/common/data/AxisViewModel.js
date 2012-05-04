@@ -182,7 +182,7 @@
 				//text.rotation = state.rotation;
 				
 				// Begin tween for marker objects
-				var animInitObj = textAnimValsFunc(text);	//this._getMarkerInitAnimValues();
+				var animInitObj = textAnimValsFunc(text);
 				this.animationValues.text[i] = animInitObj.animObj;
 				
 				this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateAxesTextCallback);
@@ -206,11 +206,18 @@
 			//text.position = state.position;
 			//text.rotation = state.rotation;
 			
+			/*
+			// Begin tween for title
+			var animInitObj = textAnimValsFunc(text);
+			this.animationValues.text[i] = animInitObj.animObj;
+			
+			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateAxesTextCallback);			
+			*/
 			var animLength 	= 500;
-			if (!this.animationValues.titleText) {
-				this.animationValues.titleText = {};
-			}			
-			var animObj = this.animationValues.titleText;
+			//if (!this.animationValues.titleText) {
+			//	this.animationValues.titleText = {};
+			//}			
+			var animObj = this.animationValues.titleText = {};
 			
 			this._animateAxisText( text, animObj, state, animLength, delay );
 		}

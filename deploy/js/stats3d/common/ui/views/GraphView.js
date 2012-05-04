@@ -188,10 +188,6 @@ if(namespace.GraphView === undefined)
 		document.addEventListener( 'touchmove', function(event) { scope._onDocumentTouchMove(event); }, false );
 		
 		this._renderAxes();
-		//this._renderGridXY();
-		//this._renderGridXZ();
-		//this._renderGridYZ();
-		//this._plotData();
 		
 		//this.toOverView();
 		// GO TO OVERVIEW WITHOUT TRIGGERING AXIS ANIMS
@@ -202,9 +198,22 @@ if(namespace.GraphView === undefined)
 		this._graphValues = {rX: this._graphObjContainer.rotation.x, rY: this._graphObjContainer.rotation.y, rZ: this._graphObjContainer.rotation.z};
 		
 		var tween = this._createGraphTween(this._graphValues, {rX: Math.PI/12, rY:-Math.PI/4, rZ: 0}, this._animLength, 0, this._updateTimeCallback);
-		tween.onComplete(this._completeTimeCallback);		
+		tween.onComplete(this._completeTimeCallback);
+
+		var t = setTimeout( function() { scope._renderGridXZ() }, 5000);
+		var t = setTimeout( function() { scope._renderGridYZ() }, 5500);
+		var t = setTimeout( function() { scope._renderGridXY() }, 6000);
+		var t = setTimeout( function() { scope._plotData() }, 6500);
 	};
-	
+	/*
+	p._renderGrid = function _renderGrid()
+	{
+		//this._renderGridXY();
+		//this._renderGridXZ();
+		//this._renderGridYZ();
+		//this._plotData();	
+	}
+	*/
 	p.disable = function disable()
 	{
 
@@ -490,18 +499,18 @@ if(namespace.GraphView === undefined)
 		//this._plotData(data.countries["Lesotho"]);
 		var regionColors = [0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0x00FFFF, 0xFF00FF];
 		this._regionColors = {};
-		for ( var i = 0; i < data.regions.length; i ++ )
+		for ( var i = 0; i < this._dataProvider.regions.length; i ++ )
 		{
-			var region = data.regions[i];
+			var region = this._dataProvider.regions[i];
 			var color = new THREE.Color();
 			//color.setHSV(Math.random(), 1.0, 1.0);
 			color.setHex(regionColors[i]);
 			this._regionColors[region.name] = color;
 		}
 		
-		for ( var countryName in data.countries ) 
+		for ( var countryName in this._dataProvider.countries ) 
 		{
-			var country = data.countries[countryName];
+			var country = this._dataProvider.countries[countryName];
 			color = this._regionColors[country.region.name];
 			//var color = new THREE.Color();
 			//color.setHSV(Math.random(), 1.0, 1.0);
@@ -615,26 +624,7 @@ if(namespace.GraphView === undefined)
 	}
 	
 	// RENDER AXES =================================
-	/*
-	p._animateAxisText = function _animateAxisText(text, animObj, state, length, delay)
-	{
-		animObj.pX = text.position.x;
-		animObj.pY = text.position.y;
-		animObj.pZ = text.position.z;
-		animObj.rX = text.rotation.x; 
-		animObj.rY = text.rotation.y; 
-		animObj.rZ = text.rotation.z;
-		
-		var animTargObj = { pX: state.position.x,
-							pY: state.position.y, 
-							pZ: state.position.z, 
-							rX: state.rotation.x, 
-							rY: state.rotation.y, 
-							rZ: state.rotation.z }
-		
-		return this._createGraphTween(animObj, animTargObj, length, delay, this._updateAxesTextCallback);
-	}
-	*/
+
 	p._createGraphTween = function _createGraphTween(animObj, animTargObj, length, delay, updateCallBack)
 	{
 		var graphTween = new TWEEN.Tween(animObj);
@@ -696,7 +686,7 @@ if(namespace.GraphView === undefined)
 		var stepSize = this._axisLength / numSteps;
 		
 		// Render X lines (Up)
-		for ( var i = 0; i <= numSteps; i ++ ) 
+		for ( var i = 1; i <= numSteps; i ++ ) 
 		{
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.x = ( i * stepSize );
@@ -712,7 +702,7 @@ if(namespace.GraphView === undefined)
 		var stepSize = this._axisLength / numSteps;	
 		
 		// Render Y lines (Across)
-		for ( var i = 0; i <= numSteps; i ++ ) 
+		for ( var i = 1; i <= numSteps; i ++ ) 
 		{
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.y = ( i * stepSize );
@@ -731,7 +721,7 @@ if(namespace.GraphView === undefined)
 		var stepSize = this._axisLength / numSteps;
 		
 		// Render Y lines (Across)
-		for ( var i = 0; i <= numSteps; i ++ ) 
+		for ( var i = 1; i <= numSteps; i ++ ) 
 		{
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.y = ( i * stepSize );
@@ -747,10 +737,10 @@ if(namespace.GraphView === undefined)
 		var stepSize = this._axisLength / numSteps;	
 		
 		// Render Z lines (Up)
-		for ( var i = 0; i <= numSteps; i ++ ) 
+		for ( var i = 1; i <= numSteps; i ++ ) 
 		{
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.z = ( i * stepSize ) -this._axisLength;
+			line.position.z = -( i * stepSize );
 			this._graphObj.add( line );
 		}
 	}
@@ -765,7 +755,7 @@ if(namespace.GraphView === undefined)
 		var stepSize = this._axisLength / numSteps;
 		
 		// Render X lines (Front/Back)
-		for ( var i = 0; i <= numSteps; i ++ ) 
+		for ( var i = 1; i <= numSteps; i ++ ) 
 		{
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
 			line.position.x = ( i * stepSize );
@@ -781,10 +771,10 @@ if(namespace.GraphView === undefined)
 		var stepSize = this._axisLength / numSteps;		
 		
 		// Render Z lines (Left/Right)
-		for ( var i = 0; i <= numSteps; i ++ ) {
+		for ( var i = 1; i <= numSteps; i ++ ) {
 
 			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.z = ( i * stepSize ) - this._axisLength;
+			line.position.z = -( i * stepSize );
 			this._graphObj.add( line );
 		}
 	}

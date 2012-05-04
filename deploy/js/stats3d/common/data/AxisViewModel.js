@@ -161,8 +161,6 @@
 		
 		p._gotoAxisView = function _gotoAxisView(axisAnimValsFunc, textAnimValsFunc, titleAnimValsFunc)
 		{
-			//if (!this.values) return;
-			
 			var delay = 1000;
 			
 			var animInitObj = axisAnimValsFunc.call();
@@ -202,16 +200,7 @@
 			var animInitObj = titleAnimValsFunc(text);
 			this.animationValues.titleText = animInitObj.animObj;
 			
-			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateAxesTextCallback);			
-			/*
-			var animLength 	= 500;
-			//if (!this.animationValues.titleText) {
-			//	this.animationValues.titleText = {};
-			//}			
-			var animObj = this.animationValues.titleText = {};
-			
-			this._animateAxisText( text, animObj, state, animLength, delay );
-			*/
+			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateAxesTextCallback);
 		}
 		
 		p.updateAxis = function updateAxis()
@@ -307,26 +296,8 @@
 					if (!isNaN(titleText.opacity))		textBox.children[0].material.opacity = titleText.opacity;
 				}			
 			}
-		}		
-		
-		p._animateAxisText = function _animateAxisText(text, animObj, state, length, delay)
-		{
-			animObj.pX = text.position.x;
-			animObj.pY = text.position.y;
-			animObj.pZ = text.position.z;
-			animObj.rX = text.rotation.x; 
-			animObj.rY = text.rotation.y; 
-			animObj.rZ = text.rotation.z;
-			
-			var animTargObj = { pX: state.position.x,
-								pY: state.position.y, 
-								pZ: state.position.z, 
-								rX: state.rotation.x, 
-								rY: state.rotation.y, 
-								rZ: state.rotation.z }
-			
-			return this._createGraphTween(animObj, animTargObj, length, delay, this._updateAxesTextCallback);
 		}
+		
 		p._createGraphTween = function _createGraphTween(animObj, animTargObj, length, delay, updateCallBack)
 		{
 			var graphTween = new TWEEN.Tween(animObj);
@@ -400,16 +371,6 @@
 						targObj: { pX: sP.x, pY: sP.y, pZ: sP.z, rX: sR.x, rY: sR.y, rZ: sR.z, opacity: 1 } };
 
 			return obj;
-		}			
-/*
-		p._getInitAxisAnimValues = function _getInitAxisAnimValues()
-		{
-			var obj = { animLength: 1000,
-						animObj: { rX: this.container.rotation.x, rY: this.container.rotation.y, rZ: this.container.rotation.z },
-						targObj: { rX: 0, rY: 0, rZ: 0 } };
-			
-			return obj;
-		};
-*/
+		}
 	}
 })();

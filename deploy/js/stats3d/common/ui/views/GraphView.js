@@ -203,17 +203,9 @@ if(namespace.GraphView === undefined)
 		var t = setTimeout( function() { scope._renderGridXZ() }, 5000);
 		var t = setTimeout( function() { scope._renderGridYZ() }, 5500);
 		var t = setTimeout( function() { scope._renderGridXY() }, 6000);
-		var t = setTimeout( function() { scope._plotData() }, 6500);
+		var t = setTimeout( function() { scope._plotData() }, 7500);
 	};
-	/*
-	p._renderGrid = function _renderGrid()
-	{
-		//this._renderGridXY();
-		//this._renderGridXZ();
-		//this._renderGridYZ();
-		//this._plotData();	
-	}
-	*/
+
 	p.disable = function disable()
 	{
 
@@ -408,13 +400,51 @@ if(namespace.GraphView === undefined)
 					vector3[axis] = len;
 					line.geometry.verticesNeedUpdate = true;
 				}
-			}			
+			}
+			
+			this._updateGridLines(this._axesObjects.gridXY, this._axesObjects.animationValues.gridXY);
+			this._updateGridLines(this._axesObjects.gridYZ, this._axesObjects.animationValues.gridYZ);
+			this._updateGridLines(this._axesObjects.gridXZ, this._axesObjects.animationValues.gridXZ);
 		}
 		
 		this._xAxisViewModel.updateAxis();
 		this._yAxisViewModel.updateAxis();
 		this._zAxisViewModel.updateAxis();
 	};
+	
+	p._updateGridLines = function _updateGridLines(gridObj, gridAnimObj)
+	{
+		if ( gridAnimObj )
+		{
+			var aLines = gridAnimObj.aLines;
+			
+			for ( var i = 0; i < aLines.length; i ++ )
+			{
+				if (!aLines[i]) continue;	// debugging
+				
+				var len = aLines[i].axisLength;
+				
+				var line = gridObj.aLines[i];
+				var vector3 = line.geometry.vertices[1];
+				vector3[gridAnimObj.aAxis] = len;
+				line.geometry.verticesNeedUpdate = true;
+			}
+			
+			var bLines = gridAnimObj.bLines;
+			
+			for ( var i = 0; i < bLines.length; i ++ )
+			{
+				if (!bLines[i]) continue;	// debugging
+				
+				var len = bLines[i].axisLength;
+				
+				var line = gridObj.bLines[i];
+				var vector3 = line.geometry.vertices[1];
+				vector3[gridAnimObj.bAxis] = len;
+				line.geometry.verticesNeedUpdate = true;
+			}				
+		}	
+	}
 	
 	p._updateAxesText = function _updateAxesText()
 	{
@@ -631,7 +661,7 @@ if(namespace.GraphView === undefined)
 		graphTween.to(animTargObj, length);
 		graphTween.delay(delay);
 		graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
-		graphTween.onUpdate(updateCallBack);
+		if (updateCallBack)		graphTween.onUpdate(updateCallBack);
 		graphTween.start();
 		
 		return graphTween;
@@ -645,7 +675,14 @@ if(namespace.GraphView === undefined)
 		
 		var delay = 1000;
 		
-		this._axesObjects = { lines: [], animationValues: { lines: [] } };
+		this._axesObjects = { lines: [], 
+							  gridXY: { aLines: [], bLines: [] }, 
+							  gridYZ: { aLines: [], bLines: [] }, 
+							  gridXZ: { aLines: [], bLines: [] },
+							  animationValues: { lines: [],
+												 gridXY: { aLines: [], bLines: [], aAxis: "y", bAxis: "x" }, 
+												 gridYZ: { aLines: [], bLines: [], aAxis: "z", bAxis: "y" }, 
+												 gridXZ: { aLines: [], bLines: [], aAxis: "z", bAxis: "x" } } };
 		
 		for ( var i = 0; i < 3; i ++ )
 		{
@@ -676,107 +713,95 @@ if(namespace.GraphView === undefined)
 	}
 	
 	// RENDER GRIDS =========================================
+	
+	p._renderGrid = function _renderGrid( numStepsA, linePosFuncA, numStepsB, linePosFuncB, gridObj, animInitObj )
+	{		
+		var stepSize = this._axisLength / numStepsA;
+		var delay = 0;
+		var delayStep = 50;
+		
+		// Animate in XY, YZ, XZ grids
+		for ( var i = 1; i <= numStepsA; i ++ ) 
+		{
+			var geometry = new THREE.Geometry();
+			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position = linePosFuncA( i * stepSize );
+			
+			this._graphObj.add( line );
+			gridObj.aLines.push(line);
+			
+			var animObj = {axisLength: 0};
+			animInitObj.aLines.push( animObj );
+
+			this._createGraphTween(animObj, {axisLength: this._axisLength}, 500, delay, this._updateTimeCallback);
+						
+			delay += delayStep;
+		}
+		
+		var stepSize = this._axisLength / numStepsB;	
+		delay = 0;
+		
+		for ( var i = 1; i <= numStepsB; i ++ ) 
+		{
+			var geometry = new THREE.Geometry();
+			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+			
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			line.position = linePosFuncB( i * stepSize );
+			
+			this._graphObj.add( line );
+			gridObj.bLines.push(line);
+			
+			var animObj = {axisLength: 0};
+			animInitObj.bLines.push( animObj );
+
+			this._createGraphTween(animObj, {axisLength: this._axisLength}, 500, delay, this._updateTimeCallback);
+						
+			delay += delayStep;			
+		}
+	}
+
+	p._gridXYLinePosXLines = function _gridXYLinePosXLines( step ) {	return new THREE.Vector3( step, 0, -this._axisLength );		}
+	p._gridXYLinePosYLines = function _gridXYLinePosYLines( step ) {	return new THREE.Vector3( 0, step, -this._axisLength );		}
+	
+	p._gridYZLinePosYLines = function _gridYZLinePosYLines( step ) {	return new THREE.Vector3( 0, step, -this._axisLength );		}
+	p._gridYZLinePosZLines = function _gridYZLinePosZLines( step ) {	return new THREE.Vector3( 0, 0, -step );					}
+	
+	p._gridXZLinePosXLines = function _gridXZLinePosXLines( step ) {	return new THREE.Vector3( step, 0, -this._axisLength );		}
+	p._gridXZLinePosZLines = function _gridXZLinePosZLines( step ) {	return new THREE.Vector3( 0, 0, -step );					}
+	
 	p._renderGridXY = function _renderGridXY()
 	{
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( 0, this._axisLength, 0 ) );
-		
-		var numSteps = this._xAxisViewModel.values.numSteps;
-		var stepSize = this._axisLength / numSteps;
-		
-		// Render X lines (Up)
-		for ( var i = 1; i <= numSteps; i ++ ) 
-		{
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.x = ( i * stepSize );
-			line.position.z = -this._axisLength;
-			this._graphObj.add( line );
-		}
-		
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0,  0 ) );
-		
-		var numSteps = this._yAxisViewModel.values.numSteps;
-		var stepSize = this._axisLength / numSteps;	
-		
-		// Render Y lines (Across)
-		for ( var i = 1; i <= numSteps; i ++ ) 
-		{
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.y = ( i * stepSize );
-			line.position.z = -this._axisLength;
-			this._graphObj.add( line );
-		}
+		var scope = this;
+		this._renderGrid( this._xAxisViewModel.values.numSteps, 
+						  function(step) { return scope._gridXYLinePosXLines(step); },
+						  this._yAxisViewModel.values.numSteps, 
+						  function(step) { return scope._gridXYLinePosYLines(step); },
+						  this._axesObjects.gridXY, this._axesObjects.animationValues.gridXY );
 	}
 	
 	p._renderGridYZ = function _renderGridYZ()
 	{
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( 0, 0, this._axisLength ) );
-		
-		var numSteps = this._yAxisViewModel.values.numSteps;
-		var stepSize = this._axisLength / numSteps;
-		
-		// Render Y lines (Across)
-		for ( var i = 1; i <= numSteps; i ++ ) 
-		{
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.y = ( i * stepSize );
-			line.position.z = -this._axisLength;
-			this._graphObj.add( line );
-		}
-		
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( 0, this._axisLength, 0 ) );
-		
-		var numSteps = this._zAxisViewModel.values.numSteps;
-		var stepSize = this._axisLength / numSteps;	
-		
-		// Render Z lines (Up)
-		for ( var i = 1; i <= numSteps; i ++ ) 
-		{
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.z = -( i * stepSize );
-			this._graphObj.add( line );
-		}
+		var scope = this;
+		this._renderGrid( this._yAxisViewModel.values.numSteps, 
+						  function(step) { return scope._gridYZLinePosYLines(step); },
+						  this._zAxisViewModel.values.numSteps, 
+						  function(step) { return scope._gridYZLinePosZLines(step); },
+						  this._axesObjects.gridYZ, this._axesObjects.animationValues.gridYZ );
 	}
 	
 	p._renderGridXZ = function _renderGridXZ()
 	{
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( 0, 0, this._axisLength ) );
-
-		var numSteps = this._xAxisViewModel.values.numSteps;
-		var stepSize = this._axisLength / numSteps;
-		
-		// Render X lines (Front/Back)
-		for ( var i = 1; i <= numSteps; i ++ ) 
-		{
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.x = ( i * stepSize );
-			line.position.z = -this._axisLength;
-			this._graphObj.add( line );
-		}		
-		
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		geometry.vertices.push( new THREE.Vector3( this._axisLength, 0, 0 ) );
-		
-		var numSteps = this._zAxisViewModel.values.numSteps;
-		var stepSize = this._axisLength / numSteps;		
-		
-		// Render Z lines (Left/Right)
-		for ( var i = 1; i <= numSteps; i ++ ) {
-
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
-			line.position.z = -( i * stepSize );
-			this._graphObj.add( line );
-		}
+		var scope = this;
+		this._renderGrid( this._xAxisViewModel.values.numSteps, 
+						  function(step) { return scope._gridXZLinePosXLines(step); },
+						  this._zAxisViewModel.values.numSteps, 
+						  function(step) { return scope._gridXZLinePosZLines(step); },
+						  this._axesObjects.gridXZ, this._axesObjects.animationValues.gridXZ );
 	}
 }
 

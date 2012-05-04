@@ -31,10 +31,13 @@
 		};
 		
 		// VALUES ======================================================
+		
+		// Used in Initial Render
 		p._getAxisMarkerPos = function _getAxisMarkerPos(step)
 		{
 			return new THREE.Vector3(step, 0, 0);
 		}
+		
 		p._getMarkerInitState = function _getMarkerInitState(text)
 		{
 			return { position: new THREE.Vector3(-this._defaultTextSize/2, -50, 0), rotation: new THREE.Vector3(0, 0, Math.PI + Math.PI/2) };
@@ -44,15 +47,6 @@
 			var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
 			
 			return { position: new THREE.Vector3(-this._defaultTextSize/2, rightOffset - 40, 0), rotation: new THREE.Vector3(Math.PI, 0, Math.PI + Math.PI/2) };
-		}
-		
-		p._getMarkerInitAnimValues = function _getMarkerInitAnimValues()
-		{
-			var obj = { animLength: 150,
-						animObj: { rX:Math.PI/2, opacity: 0, xAxisLength:0 },
-						targObj: {rX: 0, opacity: 1, xAxisLength: -20} };
-						
-			return obj;
 		}
 		p._getTitleInitState = function _getTitleInitState(text)
 		{
@@ -72,7 +66,18 @@
 						  
 			return state;
 		}	
-			
+		
+		
+		// Used in Initial Render
+		p._getMarkerInitAnimValues = function _getMarkerInitAnimValues()
+		{
+			var obj = { animLength: 150,
+						animObj: { rX:Math.PI/2, opacity: 0, xAxisLength:0 },
+						targObj: {rX: 0, opacity: 1, xAxisLength: -20} };
+						
+			return obj;
+		}
+		// Used in Initial Render
 		p._getTitleInitAnimValues = function _getTitleInitAnimValues(state)
 		{
 			var obj = { animLength: 1000,
@@ -86,7 +91,16 @@
 		{
 			var obj = { animLength: 1000,
 						animObj: { rX: this.container.rotation.x },
-						targObj: { rX: Math.PI + Math.PI/2 } };
+						targObj: { rX: -Math.PI/2 } };
+			
+			return obj;
+		};
+		
+		p._getInitAxisAnimValues = function _getInitAxisAnimValues()
+		{
+			var obj = { animLength: 1000,
+						animObj: { rX: this.container.rotation.x, rY: this.container.rotation.y, rZ: this.container.rotation.z },
+						targObj: { rX: 0, rY: 0, rZ: 0 } };
 			
 			return obj;
 		};
@@ -95,7 +109,10 @@
 
 		p.axisToBottomView = function axisToBottomView()
 		{
-			this._gotoAxisView("Bottom");
+			var scope = this;
+			this._gotoAxisView( function() { return scope._getBottomAxisAnimValues(); }, 
+								function(text) { return scope._getMarkerBottomState(text); },
+								function(text) { return scope._getTitleBottomState(text); } );
 		}		
 	}
 })();

@@ -49,6 +49,10 @@
 			
 			graphObj.add( this.container );	
 			
+			var axisInitState = this._getAxisInitState();
+			this.container.position = axisInitState.position;
+			this.container.rotation = axisInitState.rotation;
+			
 			for ( var i = 0; i <= numSteps; i ++ )
 			{
 				var geometry = new THREE.Geometry();
@@ -77,10 +81,7 @@
 				markerObj.add( text );
 				this.text.push(text);
 				
-				// Set animation values to tween in marker objects (containing text and marker line for point on axis)
-				//var animVal = this.animationValues.markers[i];
-
-				// Begin tween for marker objects
+				// Begin intro tween for marker objects
 				var animInitObj = this._getMarkerInitAnimValues();
 				this.animationValues.markers[i] = animInitObj.animObj;
 				
@@ -95,16 +96,15 @@
 			
 			state = this._getTitleInitState(text);
 			
-			this.markerTitleDefault = state;
-			
-			text.position = this.markerTitleDefault.position;
-			text.rotation = this.markerTitleDefault.rotation;
+			text.position = state.position;
+			text.rotation = state.rotation;
 			
 			this.container.add( text );
 			this.titleText = text;
 			
 			text.children[0].material.opacity = 0;
 			
+			// animate in titles
 			var animInitObj = this._getTitleInitAnimValues(state);
 			this.animationValues.titleText = animInitObj.animObj;
 			
@@ -153,19 +153,19 @@
 		
 		p.axisToDefaultView = function axisToDefaultView()
 		{
-			this._gotoAxisView("Init");
+			var scope = this;
+			this._gotoAxisView( function() { return scope._getInitAxisAnimValues(); }, 
+								function(text) { return scope._getMarkerInitState(text); }, 
+								function(text) { return scope._getTitleInitState(text); } );
 		}
 		
-		p._gotoAxisView = function _gotoAxisView(name)
+		p._gotoAxisView = function _gotoAxisView(axisAnimValsFunc, markerStateFunc, titleStateFunc)
 		{
-			if (!this.values) return;
+			//if (!this.values) return;
 			
-			var delay = 0;
+			var delay = 1000;
 			
-			var numSteps = this.values.numSteps;
-			//this.container.rotation.x = 0;
-			
-			var animInitObj = this["_get"+name+"AxisAnimValues"]();
+			var animInitObj = axisAnimValsFunc.call();
 			this.animationValues.container = animInitObj.animObj;
 			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateTimeCallback);
 
@@ -175,7 +175,7 @@
 			{
 				var text = this.markers[i].children[1];
 
-				var state = this["_getMarker"+name+"State"](text);
+				var state = markerStateFunc(text);
 
 				//text.position = state.position;
 				//text.rotation = state.rotation;
@@ -190,17 +190,17 @@
 			
 			text = this.titleText;
 			
-			delay = 800;
+			delay = 1800;
 
-			state = this["_getTitle"+name+"State"](text);
+			state = titleStateFunc(text);
 			
 			//text.position = state.position;
 			//text.rotation = state.rotation;
 			
-			var animLength = 500;
+			var animLength 	= 500;
 			if (!this.animationValues.titleText) {
 				this.animationValues.titleText = {};
-			}
+			}			
 			var animObj = this.animationValues.titleText;
 			
 			this._animateAxisText( text, animObj, state, animLength, delay );
@@ -331,6 +331,14 @@
 		
 		
 		// VALUES ===========================================
+		p._getAxisInitState = function _getAxisInitState()
+		{
+			var state = { position: new THREE.Vector3(0, 0, 0),
+						  rotation: new THREE.Vector3(0, 0, 0) };
+
+			return state;	
+		}
+		
 		p._getAxisMarkerPos = function _getAxisMarkerPos(step)
 		{
 			return null;
@@ -351,6 +359,7 @@
 		{
 			return null;
 		};
+/*
 		p._getInitAxisAnimValues = function _getInitAxisAnimValues()
 		{
 			var obj = { animLength: 1000,
@@ -359,5 +368,6 @@
 			
 			return obj;
 		};
+*/
 	}
 })();

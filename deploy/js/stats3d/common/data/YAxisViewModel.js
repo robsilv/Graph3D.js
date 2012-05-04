@@ -58,6 +58,8 @@
 
 			return state;
 		}
+		
+		// Used in Initial Render
 		p._getTitleInitAnimValues = function _getTitleInitAnimValues(state)
 		{
 			var obj = { animLength: 1000,
@@ -76,17 +78,34 @@
 			return obj;
 		};
 		
+		p._getInitAxisAnimValues = function _getInitAxisAnimValues()
+		{
+			var obj = { animLength: 1000,
+						animObj: { rX: this.container.rotation.x, rY: this.container.rotation.y, rZ: this.container.rotation.z },
+						targObj: { rX: 0, rY: 0, rZ: 0 } };
+			
+			return obj;
+		};
+		
 		// ANIMATIONS ========================================
 
 		p.axisToRightView = function axisToRightView()
 		{
 			//this.container.rotation.y = Math.PI/2;
-			var delay = 0;
+			var delay = 1000;
 			
 			var animInitObj = this._getRightAxisAnimValues();
 			this.animationValues.container = animInitObj.animObj;
 			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateTimeCallback);
-		}		
+		}
+
+		p.axisToBottomView = function axisToBottomView()
+		{
+			var scope = this;
+			this._gotoAxisView( function() { return scope._getInitAxisAnimValues(); },
+								function(text) { return scope._getMarkerInitState(text); },
+								function(text) { return scope._getTitleInitState(text); } );
+		}			
 	}
 })();
 

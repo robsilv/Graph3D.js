@@ -126,8 +126,6 @@ if(namespace.GraphView === undefined)
 		
 		var scope = this;
 		window.addEventListener( 'resize', function() { scope._onWindowResize() }, false );
-		
-		this.enable();
 	}
 	
 	p._onWindowResize = function _onWindowResize() 
@@ -189,8 +187,18 @@ if(namespace.GraphView === undefined)
 		document.addEventListener( 'touchstart', function(event) { scope._onDocumentTouchStart(event); }, false );
 		document.addEventListener( 'touchmove', function(event) { scope._onDocumentTouchMove(event); }, false );
 		
-		this.toOverView();
+		this._renderAxes();
+		//this._renderGridXY();
+		//this._renderGridXZ();
+		//this._renderGridYZ();
+		//this._plotData();
 		
+		this.toOverView();
+	};
+	
+	p.disable = function disable()
+	{
+
 	};
 	
 	p._onDocumentMouseDown = function _onDocumentMouseDown( event )
@@ -263,12 +271,7 @@ if(namespace.GraphView === undefined)
 			this._mouseY = event.touches[ 0 ].pageY - window.innerHeight / 2;
 			this._targetRotationX = this._targetRotationXOnMouseDown + ( this._mouseY - this._mouseYOnMouseDown ) * 0.05;
 		}
-	};	
-	
-	p.disable = function disable()
-	{
-
-	};
+	};		
 	
 	p.toBottomView = function toBottomView()
 	{
@@ -287,7 +290,7 @@ if(namespace.GraphView === undefined)
 		graphTween.start();		
 
 		this._xAxisViewModel.axisToBottomView();
-		this._yAxisViewModel.axisToDefaultView();
+		this._yAxisViewModel.axisToBottomView();
 		this._zAxisViewModel.axisToBottomView();
 		
 		//if (this._xAxisViewModel) 	this._graphObj.add(this._xAxisViewModel.container);
@@ -337,7 +340,8 @@ if(namespace.GraphView === undefined)
 		
 		this._xAxisViewModel.axisToDefaultView();
 		this._yAxisViewModel.axisToDefaultView();
-		this._zAxisViewModel.axisToDefaultView();
+		this._zAxisViewModel.axisToRightView();
+		//this._zAxisViewModel.axisToDefaultView();
 		
 		//if (this._xAxisViewModel) 	this._graphObj.add(this._xAxisViewModel.container);
 		//if (this._yAxisViewModel) 	this._graphObj.add(this._yAxisViewModel);
@@ -361,6 +365,7 @@ if(namespace.GraphView === undefined)
 		
 		this._xAxisViewModel.axisToDefaultView();
 		this._yAxisViewModel.axisToDefaultView();
+		//this._zAxisViewModel.axisToRightView();
 		this._zAxisViewModel.axisToDefaultView();
 		
 		//if (this._xAxisViewModel) 	this._graphObj.add(this._xAxisViewModel.container);
@@ -482,12 +487,7 @@ if(namespace.GraphView === undefined)
 		
 		// RENDER
 		
-		this._renderAxes();
-		//this._renderGridXY();
-		//this._renderGridXZ();
-		//this._renderGridYZ();
-		//this._plotData();
-		
+		this.enable();
 		//console.log("Z (Time) axis minVal "+this._zAxisViewModel.values.minVal+" maxVal "+this._zAxisViewModel.values.maxVal);
 	}
 	

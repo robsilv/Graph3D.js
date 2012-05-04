@@ -39,7 +39,8 @@
 		{
 		    var rightOffset = -1 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
     
-			return { position: new THREE.Vector3(rightOffset - 40, 0, this._defaultTextSize/2), rotation: new THREE.Vector3(-Math.PI/2, 0, 0) };
+			//return { position: new THREE.Vector3(rightOffset - 40, 0, this._defaultTextSize/2), rotation: new THREE.Vector3(-Math.PI/2, 0, 0) };
+			return { position: new THREE.Vector3(rightOffset - 40, 0, -this._defaultTextSize/2), rotation: new THREE.Vector3(Math.PI/2, 0, 0) };
 		}
 		p._getMarkerRightState = function _getMarkerRightState(text)
 		{
@@ -67,9 +68,12 @@
 		{
 			var centreOffset = -0.5 * ( text.children[0].geometry.boundingBox.max.x - text.children[0].geometry.boundingBox.min.x );
   
-			var state = { position: new THREE.Vector3(-120, 0, -this._axisLength/2 + centreOffset),
-						  rotation: new THREE.Vector3(-Math.PI/2, 0, Math.PI + Math.PI/2) };
+			//var state = { position: new THREE.Vector3(-120, 0, -this._axisLength/2 + centreOffset),
+			//			  rotation: new THREE.Vector3(-Math.PI/2, 0, Math.PI + Math.PI/2) };
 
+			var state = { position: new THREE.Vector3(-120, 0, -this._axisLength/2 - centreOffset),
+						  rotation: new THREE.Vector3(Math.PI/2, 0, Math.PI + Math.PI/2) };
+			
 			return state;
 		}
 		p._getTitleRightState = function _getTitleRightState(text)
@@ -91,6 +95,7 @@
 			return state;	
 		}
 		
+		// Used in Initial Render
 		p._getTitleInitAnimValues = function getTitleInitAnimValues(state)
 		{
 			var obj = { animLength: 1000,
@@ -118,16 +123,39 @@
 			return obj;
 		}
 		
+		p._getInitAxisAnimValues = function _getInitAxisAnimValues()
+		{
+			var obj = { animLength: 1000,
+						animObj: { rZ: this.container.rotation.z },
+						targObj: { rZ: Math.PI/2 } }; // should relate to _getAxisInitState?
+			
+			return obj;
+		};
+		
+		p._getAxisInitState = function _getAxisInitState()
+		{
+			var state = { position: new THREE.Vector3(0, 0, 0),
+						  rotation: new THREE.Vector3(0, 0, Math.PI/2) };
+
+			return state;	
+		}
+		
 		//ANIMATIONS =====================================
 
 		p.axisToRightView = function axisToRightView()
 		{
-			this._gotoAxisView("Right");
+			var scope = this;
+			this._gotoAxisView( function() { return scope._getRightAxisAnimValues(); },
+								function(text) { return scope._getMarkerRightState(text); },
+								function(text) { return scope._getTitleRightState(text); } );
 		}
 		
 		p.axisToBottomView = function axisToBottomView()
 		{
-			this._gotoAxisView("Bottom");
+			var scope = this;
+			this._gotoAxisView( function() { return scope._getBottomAxisAnimValues(); },
+								function(text) { return scope._getMarkerBottomState(text); },
+								function(text) { return scope._getTitleBottomState(text); } );
 		}	
 	}
 })();

@@ -112,8 +112,8 @@
 			var scope = this;
 			this._gotoAxisView( function() { return scope._getBottomAxisAnimValues(); }, 
 								//function(text) { return scope._getMarkerBottomState(text); },
-								function(text) { return scope._getTextInitAnimValues(text, scope._getMarkerBottomState(text)); }, 
-								function(text) { return scope._getTitleBottomState(text); } );
+								function(text) { return scope._getTextAnimValues(text, scope._getMarkerBottomState(text)); }, 
+								function(text) { return scope._getTitleAnimValues(text, scope._getTitleBottomState(text)); } );
 		}		
 	}
 })();

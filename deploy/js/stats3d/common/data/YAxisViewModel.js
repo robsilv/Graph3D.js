@@ -108,27 +108,18 @@
 
 		p.axisToRightView = function axisToRightView()
 		{
-			/*
-			//this.container.rotation.y = Math.PI/2;
-			var delay = 1000;
-			
-			var animInitObj = this._getRightAxisAnimValues();
-			this.animationValues.container = animInitObj.animObj;
-			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateTimeCallback);
-			*/
 			var scope = this;
 			this._gotoAxisView( function() { return scope._getRightAxisAnimValues(); },
-								function(text) { return scope._getTextInitAnimValues(text, scope._getMarkerInitState(text)); }, 
-								function(text) { return scope._getTitleInitState(text); } );
+								function(text) { return scope._getTextAnimValues(text, scope._getMarkerInitState(text)); }, 
+								function(text) { return scope._getTitleAnimValues(text, scope._getTitleInitState(text)); } );
 		}
 
 		p.axisToBottomView = function axisToBottomView()
 		{
 			var scope = this;
 			this._gotoAxisView( function() { return scope._getInitAxisAnimValues(); },
-								//function(text) { return scope._getMarkerInitState(text); },
-								function(text) { return scope._getTextInitAnimValues(text, scope._getMarkerBottomState(text)); }, 
-								function(text) { return scope._getTitleBottomState(text); } );
+								function(text) { return scope._getTextAnimValues(text, scope._getMarkerBottomState(text)); }, 
+								function(text) { return scope._getTitleAnimValues(text, scope._getTitleBottomState(text)); } );
 		}			
 	}
 })();

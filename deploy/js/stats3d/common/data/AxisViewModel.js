@@ -155,12 +155,11 @@
 		{
 			var scope = this;
 			this._gotoAxisView( function() { return scope._getInitAxisAnimValues(); }, 
-								//function(text) { return scope._getMarkerInitState(text); }, 
-								function(text) { return scope._getTextInitAnimValues(text, scope._getMarkerInitState(text)); }, 
-								function(text) { return scope._getTitleInitState(text); } );
+								function(text) { return scope._getTextAnimValues(text, scope._getMarkerInitState(text)); }, 
+								function(text) { return scope._getTitleAnimValues(text, scope._getTitleInitState(text)); } );
 		}
 		
-		p._gotoAxisView = function _gotoAxisView(axisAnimValsFunc, textAnimValsFunc, titleStateFunc)
+		p._gotoAxisView = function _gotoAxisView(axisAnimValsFunc, textAnimValsFunc, titleAnimValsFunc)
 		{
 			//if (!this.values) return;
 			
@@ -186,14 +185,7 @@
 				this.animationValues.text[i] = animInitObj.animObj;
 				
 				this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateAxesTextCallback);
-				
-				/////
-				/*
-				var animLength = 150;
-				var animObj = this.animationValues.text[i] = {};
-				
-				this._animateAxisText( text, animObj, state, animLength, delay );
-				*/
+
 				delay += 25;
 			}
 			
@@ -201,18 +193,17 @@
 			
 			delay = 1800;
 
-			state = titleStateFunc(text);
+			//state = titleStateFunc(text);
 			
 			//text.position = state.position;
 			//text.rotation = state.rotation;
 			
-			/*
 			// Begin tween for title
-			var animInitObj = textAnimValsFunc(text);
-			this.animationValues.text[i] = animInitObj.animObj;
+			var animInitObj = titleAnimValsFunc(text);
+			this.animationValues.titleText = animInitObj.animObj;
 			
 			this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateAxesTextCallback);			
-			*/
+			/*
 			var animLength 	= 500;
 			//if (!this.animationValues.titleText) {
 			//	this.animationValues.titleText = {};
@@ -220,6 +211,7 @@
 			var animObj = this.animationValues.titleText = {};
 			
 			this._animateAxisText( text, animObj, state, animLength, delay );
+			*/
 		}
 		
 		p.updateAxis = function updateAxis()
@@ -378,7 +370,7 @@
 			return null;
 		};
 		
-		p._getTextInitAnimValues = function _getTextInitAnimValues(text, state)
+		p._getTextAnimValues = function _getTextAnimValues(text, state)
 		{
 			//var state = this._getMarkerInitState(text);
 			
@@ -392,7 +384,23 @@
 						targObj: { pX: sP.x, pY: sP.y, pZ: sP.z, rX: sR.x, rY: sR.y, rZ: sR.z, opacity: 1 } };
 
 			return obj;
-		}		
+		}
+		
+		p._getTitleAnimValues = function _getTitleAnimValues(text, state)
+		{
+			//var state = this._getMarkerInitState(text);
+			
+			var tP = text.position;
+			var tR = text.rotation;
+			var sP = state.position;
+			var sR = state.rotation;
+			
+			var obj = { animLength: 500,
+						animObj: { pX: tP.x, pY: tP.y, pZ: tP.z, rX: tR.x, rY: tR.y, rZ: tR.z, opacity: 1 },
+						targObj: { pX: sP.x, pY: sP.y, pZ: sP.z, rX: sR.x, rY: sR.y, rZ: sR.z, opacity: 1 } };
+
+			return obj;
+		}			
 /*
 		p._getInitAxisAnimValues = function _getInitAxisAnimValues()
 		{

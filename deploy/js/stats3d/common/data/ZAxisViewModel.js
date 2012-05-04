@@ -146,7 +146,8 @@
 		{
 			var scope = this;
 			this._gotoAxisView( function() { return scope._getRightAxisAnimValues(); },
-								function(text) { return scope._getMarkerRightState(text); },
+								//function(text) { return scope._getMarkerRightState(text); },
+								function(text) { return scope._getTextInitAnimValues(text, scope._getMarkerRightState(text)); }, 
 								function(text) { return scope._getTitleRightState(text); } );
 		}
 		
@@ -154,7 +155,8 @@
 		{
 			var scope = this;
 			this._gotoAxisView( function() { return scope._getBottomAxisAnimValues(); },
-								function(text) { return scope._getMarkerBottomState(text); },
+								//function(text) { return scope._getMarkerBottomState(text); },
+								function(text) { return scope._getTextInitAnimValues(text, scope._getMarkerBottomState(text)); }, 
 								function(text) { return scope._getTitleBottomState(text); } );
 		}	
 	}

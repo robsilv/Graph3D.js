@@ -193,7 +193,16 @@ if(namespace.GraphView === undefined)
 		//this._renderGridYZ();
 		//this._plotData();
 		
-		this.toOverView();
+		//this.toOverView();
+		// GO TO OVERVIEW WITHOUT TRIGGERING AXIS ANIMS
+		this._currentView = GraphView.OVER;
+	
+		this._freeRotate = false;
+		
+		this._graphValues = {rX: this._graphObjContainer.rotation.x, rY: this._graphObjContainer.rotation.y, rZ: this._graphObjContainer.rotation.z};
+		
+		var tween = this._createGraphTween(this._graphValues, {rX: Math.PI/12, rY:-Math.PI/4, rZ: 0}, this._animLength, 0, this._updateTimeCallback);
+		tween.onComplete(this._completeTimeCallback);		
 	};
 	
 	p.disable = function disable()
@@ -282,12 +291,8 @@ if(namespace.GraphView === undefined)
 		
 		this._graphValues = {rX: this._graphObjContainer.rotation.x, rY: this._graphObjContainer.rotation.y, rZ: this._graphObjContainer.rotation.z};
 		
-		var graphTween = new TWEEN.Tween(this._graphValues);
-		graphTween.to({rX: 0, rY: -Math.PI / 2, rZ: Math.PI / 2}, this._animLength);
-		graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
-		graphTween.onUpdate(this._updateTimeCallback);
-		graphTween.onComplete(this._completeTimeCallback);
-		graphTween.start();		
+		var tween = this._createGraphTween(this._graphValues, {rX: 0, rY: -Math.PI / 2, rZ: Math.PI / 2}, this._animLength, 0, this._updateTimeCallback);
+		tween.onComplete(this._completeTimeCallback);
 
 		this._xAxisViewModel.axisToBottomView();
 		this._yAxisViewModel.axisToBottomView();
@@ -306,13 +311,9 @@ if(namespace.GraphView === undefined)
 		
 		this._graphValues = {rX: this._graphObjContainer.rotation.x, rY: this._graphObjContainer.rotation.y, rZ: this._graphObjContainer.rotation.z};
 		
-		var graphTween = new TWEEN.Tween(this._graphValues);
-		graphTween.to({rX: 0, rY:-Math.PI / 2, rZ: 0}, this._animLength);
-		graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
-		graphTween.onUpdate(this._updateTimeCallback);
-		graphTween.onComplete(this._completeTimeCallback);
-		graphTween.start();
-		
+		var tween = this._createGraphTween(this._graphValues, {rX: 0, rY:-Math.PI / 2, rZ: 0}, this._animLength, 0, this._updateTimeCallback);
+		tween.onComplete(this._completeTimeCallback);
+
 		this._xAxisViewModel.axisToDefaultView();
 		this._yAxisViewModel.axisToRightView();
 		this._zAxisViewModel.axisToRightView();
@@ -331,12 +332,8 @@ if(namespace.GraphView === undefined)
 		
 		this._graphValues = {rX: this._graphObjContainer.rotation.x, rY: this._graphObjContainer.rotation.y, rZ: this._graphObjContainer.rotation.z};
 		
-		var graphTween = new TWEEN.Tween(this._graphValues);
-		graphTween.to({rX: 0, rY:0, rZ: 0}, this._animLength);
-		graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
-		graphTween.onUpdate(this._updateTimeCallback);
-		graphTween.onComplete(this._completeTimeCallback);
-		graphTween.start();
+		var tween = this._createGraphTween(this._graphValues, {rX: 0, rY:0, rZ: 0}, this._animLength, 0, this._updateTimeCallback);
+		tween.onComplete(this._completeTimeCallback);
 		
 		this._xAxisViewModel.axisToDefaultView();
 		this._yAxisViewModel.axisToDefaultView();
@@ -356,12 +353,8 @@ if(namespace.GraphView === undefined)
 		
 		this._graphValues = {rX: this._graphObjContainer.rotation.x, rY: this._graphObjContainer.rotation.y, rZ: this._graphObjContainer.rotation.z};
 		
-		var graphTween = new TWEEN.Tween(this._graphValues);
-		graphTween.to({rX: Math.PI/12, rY:-Math.PI/4, rZ: 0}, this._animLength);
-		graphTween.easing(TWEEN.Easing.Quadratic.EaseInOut);
-		graphTween.onUpdate(this._updateTimeCallback);
-		graphTween.onComplete(this._completeTimeCallback);
-		graphTween.start();
+		var tween = this._createGraphTween(this._graphValues, {rX: Math.PI/12, rY:-Math.PI/4, rZ: 0}, this._animLength, 0, this._updateTimeCallback);
+		tween.onComplete(this._completeTimeCallback);
 		
 		this._xAxisViewModel.axisToDefaultView();
 		this._yAxisViewModel.axisToDefaultView();

@@ -155,11 +155,12 @@
 		{
 			var scope = this;
 			this._gotoAxisView( function() { return scope._getInitAxisAnimValues(); }, 
-								function(text) { return scope._getMarkerInitState(text); }, 
+								//function(text) { return scope._getMarkerInitState(text); }, 
+								function(text) { return scope._getTextInitAnimValues(text, scope._getMarkerInitState(text)); }, 
 								function(text) { return scope._getTitleInitState(text); } );
 		}
 		
-		p._gotoAxisView = function _gotoAxisView(axisAnimValsFunc, markerStateFunc, titleStateFunc)
+		p._gotoAxisView = function _gotoAxisView(axisAnimValsFunc, textAnimValsFunc, titleStateFunc)
 		{
 			//if (!this.values) return;
 			
@@ -175,16 +176,24 @@
 			{
 				var text = this.markers[i].children[1];
 
-				var state = markerStateFunc(text);
+				//var state = markerStateFunc(text);
 
 				//text.position = state.position;
 				//text.rotation = state.rotation;
 				
+				// Begin tween for marker objects
+				var animInitObj = textAnimValsFunc(text);	//this._getMarkerInitAnimValues();
+				this.animationValues.text[i] = animInitObj.animObj;
+				
+				this._createGraphTween(animInitObj.animObj, animInitObj.targObj, animInitObj.animLength, delay, this._updateAxesTextCallback);
+				
+				/////
+				/*
 				var animLength = 150;
 				var animObj = this.animationValues.text[i] = {};
 				
 				this._animateAxisText( text, animObj, state, animLength, delay );
-				
+				*/
 				delay += 25;
 			}
 			
@@ -274,12 +283,14 @@
 					for ( var i = 0; i < texts.length; i ++ )
 					{
 						var textBox = this.text[i];
-						if (!isNaN(texts[i].pX))	textBox.position.x = texts[i].pX;
-						if (!isNaN(texts[i].pY))	textBox.position.y = texts[i].pY;
-						if (!isNaN(texts[i].pZ))	textBox.position.z = texts[i].pZ;
-						if (!isNaN(texts[i].rX))	textBox.rotation.x = texts[i].rX;
-						if (!isNaN(texts[i].rY))	textBox.rotation.y = texts[i].rY;
-						if (!isNaN(texts[i].rZ))	textBox.rotation.z = texts[i].rZ;
+						var animObj = texts[i];
+						if (!isNaN(animObj.pX))		textBox.position.x = animObj.pX;
+						if (!isNaN(animObj.pY))		textBox.position.y = animObj.pY;
+						if (!isNaN(animObj.pZ))		textBox.position.z = animObj.pZ;
+						if (!isNaN(animObj.rX))		textBox.rotation.x = animObj.rX;
+						if (!isNaN(animObj.rY))		textBox.rotation.y = animObj.rY;
+						if (!isNaN(animObj.rZ))		textBox.rotation.z = animObj.rZ;
+						if (!isNaN(animObj.opacity))	textBox.children[0].material.opacity = animObj.opacity;
 						//console.log("text pX "+texts[i].pX+" pY "+texts[i].pY+" pZ "+texts[i].pZ+" rX "+texts[i].rX+" rY "+texts[i].rY+" rZ "+texts[i].rZ);
 					}
 				}
@@ -359,6 +370,22 @@
 		{
 			return null;
 		};
+		
+		p._getTextInitAnimValues = function _getTextInitAnimValues(text, state)
+		{
+			//var state = this._getMarkerInitState(text);
+			
+			var tP = text.position;
+			var tR = text.rotation;
+			var sP = state.position;
+			var sR = state.rotation;
+			
+			var obj = { animLength: 150,
+						animObj: { pX: tP.x, pY: tP.y, pZ: tP.z, rX: tR.x, rY: tR.y, rZ: tR.z, opacity: 1 },
+						targObj: { pX: sP.x, pY: sP.y, pZ: sP.z, rX: sR.x, rY: sR.y, rZ: sR.z, opacity: 1 } };
+
+			return obj;
+		}		
 /*
 		p._getInitAxisAnimValues = function _getInitAxisAnimValues()
 		{

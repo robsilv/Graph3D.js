@@ -103,7 +103,8 @@
 		{
 			var scope = this;
 			this._gotoAxisView( function() { return scope._getInitAxisAnimValues(); },
-								function(text) { return scope._getMarkerInitState(text); },
+								//function(text) { return scope._getMarkerInitState(text); },
+								function(text) { return scope._getTextInitAnimValues(text, scope._getMarkerInitState(text)); }, 
 								function(text) { return scope._getTitleInitState(text); } );
 		}			
 	}

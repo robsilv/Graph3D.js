@@ -548,35 +548,42 @@ if(namespace.GraphView === undefined)
 		}	
 	}
 	
-	p._plotLine = function _plotLine(country, color)
+	p._plotLine = function _plotLine(data, color)
 	{
-		var minYear = this._zAxisViewModel.values.minVal;
+		var minZ = this._zAxisViewModel.values.minVal;
+		var maxZ = this._zAxisViewModel.values.maxVal;
+		
+		var x = "gdpPerCapita";
+		var y = "hivPrevalence";
 		
 		// massage data
-		var yearsObj = {};
-		for ( var year in country.gdpPerCapita )
+		// Z-Axis is the axis that X and Y data are plotted against.
+		// Loop through the X and Y axes values for the line, storing them on a new object in terms of Z.
+		
+		var zValuesObj = {};
+		for ( var z in data[x] )
 		{
-			if ( year < minYear ) continue;
+			if ( z < minZ || z > maxZ ) continue;
 			
-			var value = country.gdpPerCapita[year];
+			var value = data[x][z];
 			
-			if (!yearsObj[year]) {
-				yearsObj[year] = {};
+			if (!zValuesObj[z]) {
+				zValuesObj[z] = {};
 			}
 			
-			yearsObj[year].gdpPerCapita = value;
+			zValuesObj[z].x = value;
 		}
 		
-		for ( var year in country.hivPrevalence )
+		for ( var z in data[y] )
 		{
-			if ( year < minYear ) continue;
+			if ( z < minZ || z > maxZ ) continue;
 			
-			var value = country.hivPrevalence[year];
-			if (!yearsObj[year]) {
-				yearsObj[year] = {};
+			var value = data[y][z];
+			if (!zValuesObj[z]) {
+				zValuesObj[z] = {};
 			}
 			
-			yearsObj[year].hivPrevalence = value;
+			zValuesObj[z].y = value;
 		}
 		
 		
@@ -585,7 +592,7 @@ if(namespace.GraphView === undefined)
 		
 		//init Particles
 		var lineGeom = new THREE.Geometry();
-		var geometry = new THREE.Geometry();
+		var particleGeom = new THREE.Geometry();
 		//create one shared material
 		
 		var sprite = THREE.ImageUtils.loadTexture("../files/img/particle2.png");
@@ -599,52 +606,52 @@ if(namespace.GraphView === undefined)
 			vertexColors: true //allows 1 color per particle
 		});		
 		
-		var prevHIVValue = 0;
-		var prevGDPValue = 0;
+		var prevYValue = 0;
+		var prevXValue = 0;
 		
-		for ( var year in yearsObj )
+		for ( var z in zValuesObj )
 		{
-			var gdp = yearsObj[year].gdpPerCapita;
-			var hiv = yearsObj[year].hivPrevalence;
-			//console.log(year+" = "+value);
+			var x = zValuesObj[z].x;
+			var y = zValuesObj[z].y;
+			//console.log(z+" = "+value);
 					
-			if (!gdp) 	gdp = prevGDPValue;
-			else		prevGDPValue = gdp;
-			if (!hiv) 	hiv = prevHIVValue;
-			else		prevHIVValue = hiv;
+			if (!x) 	x = prevXValue;
+			else		prevXValue = x;
+			if (!y) 	y = prevYValue;
+			else		prevYValue = y;
 			
 			// XPOS
-			var diffFromZero = gdp - this._xAxisViewModel.values.minVal;
+			var diffFromZero = x - this._xAxisViewModel.values.minVal;
 			var valueLengthOfAxis = this._xAxisViewModel.values.maxVal - this._xAxisViewModel.values.minVal;
 			var ratio = diffFromZero / valueLengthOfAxis;
 			
-			xpos = ratio * this._axisLength;
+			var xpos = ratio * this._axisLength;
 			
 			// YPOS
-			var diffFromZero = hiv - this._yAxisViewModel.values.minVal;
+			var diffFromZero = y - this._yAxisViewModel.values.minVal;
 			var valueLengthOfAxis = this._yAxisViewModel.values.maxVal - this._yAxisViewModel.values.minVal;
 			var ratio = diffFromZero / valueLengthOfAxis;
 			
-			ypos = ratio * this._axisLength;			
+			var ypos = ratio * this._axisLength;			
 
 			// ZPOS
-			var diffFromZero = year - this._zAxisViewModel.values.minVal;
+			var diffFromZero = z - this._zAxisViewModel.values.minVal;
 			var valueLengthOfAxis = this._zAxisViewModel.values.maxVal - this._zAxisViewModel.values.minVal;
 			var ratio = diffFromZero / valueLengthOfAxis;
 			
-			zpos = -ratio * this._axisLength;
+			var zpos = -ratio * this._axisLength;
 
 			var pos = new THREE.Vector3( xpos, ypos, zpos );
-			geometry.vertices.push(pos);
+			particleGeom.vertices.push(pos);
 			lineGeom.vertices.push(pos);
 			
 			colors.push(color);		
 		}
 		
-		geometry.colors = colors;
+		particleGeom.colors = colors;
 		
 		//init particle system
-		var particles = new THREE.ParticleSystem(geometry, material);
+		var particles = new THREE.ParticleSystem(particleGeom, material);
 		particles.sortParticles = false;
 		this._graphObj.add(particles);		
 		

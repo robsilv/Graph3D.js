@@ -1,7 +1,7 @@
 (function(){
 	
-	var AxisViewModel = STATS3D.namespace("STATS3D.common.data").AxisViewModel;
-	var namespace = STATS3D.namespace("STATS3D.common.data");
+	var AxisViewModel = GRAPH3D.namespace("GRAPH3D.common.data").AxisViewModel;
+	var namespace = GRAPH3D.namespace("GRAPH3D.common.data");
 	
 	if(namespace.YAxisViewModel === undefined) {
 		

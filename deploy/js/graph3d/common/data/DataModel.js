@@ -1,10 +1,10 @@
 (function(){
 
-var namespace = STATS3D.namespace("STATS3D.common.data");
+var namespace = GRAPH3D.namespace("GRAPH3D.common.data");
 	
-var ListenerFunctions = STATS3D.namespace("STATS3D.utils.events").ListenerFunctions;
-var TextLoader = STATS3D.namespace("STATS3D.utils.loading").TextLoader;
-var EventDispatcher = STATS3D.namespace("STATS3D.utils.events").EventDispatcher;
+var ListenerFunctions = GRAPH3D.namespace("GRAPH3D.utils.events").ListenerFunctions;
+var TextLoader = GRAPH3D.namespace("GRAPH3D.utils.loading").TextLoader;
+var EventDispatcher = GRAPH3D.namespace("GRAPH3D.utils.events").EventDispatcher;
 
 if(namespace.DataModel === undefined) 
 {

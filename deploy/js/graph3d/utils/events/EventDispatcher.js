@@ -1,6 +1,6 @@
 (function(){
 	
-	var namespace = STATS3D.namespace("STATS3D.utils.events");
+	var namespace = GRAPH3D.namespace("GRAPH3D.utils.events");
 	
 	if(namespace.EventDispatcher === undefined) {
 		

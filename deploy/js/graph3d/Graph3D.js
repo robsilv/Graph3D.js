@@ -1,14 +1,14 @@
 /**
- * STATS3D Global Abatement
+ * GRAPH3D Global Abatement
  */
 
-var STATS3D = STATS3D || {};
+var GRAPH3D = GRAPH3D || {};
 
-STATS3D.namespace = function (aNamespace){
+GRAPH3D.namespace = function (aNamespace){
     var parts = aNamespace.split('.'),
-        parent = STATS3D,
+        parent = GRAPH3D,
         i;
-    if (parts[0] === "STATS3D") {
+    if (parts[0] === "GRAPH3D") {
         parts = parts.slice(1);
     }
 

@@ -1,13 +1,13 @@
 (function(){
 
-var namespace = STATS3D.namespace("STATS3D.common.ui.views");
-var GraphUtils = STATS3D.namespace("STATS3D.common.data").GraphUtils;
-var XAxisViewModel = STATS3D.namespace("STATS3D.common.data").XAxisViewModel;
-var YAxisViewModel = STATS3D.namespace("STATS3D.common.data").YAxisViewModel;
-var ZAxisViewModel = STATS3D.namespace("STATS3D.common.data").ZAxisViewModel;
-var ListenerFunctions = STATS3D.namespace("STATS3D.utils.events").ListenerFunctions;
+var namespace = GRAPH3D.namespace("GRAPH3D.common.ui.views");
+var GraphUtils = GRAPH3D.namespace("GRAPH3D.common.data").GraphUtils;
+var XAxisViewModel = GRAPH3D.namespace("GRAPH3D.common.data").XAxisViewModel;
+var YAxisViewModel = GRAPH3D.namespace("GRAPH3D.common.data").YAxisViewModel;
+var ZAxisViewModel = GRAPH3D.namespace("GRAPH3D.common.data").ZAxisViewModel;
+var ListenerFunctions = GRAPH3D.namespace("GRAPH3D.utils.events").ListenerFunctions;
 
-//var EventDispatcher = STATS3D.namespace("STATS3D.utils.events").EventDispatcher;
+//var EventDispatcher = GRAPH3D.namespace("GRAPH3D.utils.events").EventDispatcher;
 
 if(namespace.GraphView === undefined) 
 {	

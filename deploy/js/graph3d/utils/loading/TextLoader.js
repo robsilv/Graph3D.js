@@ -1,9 +1,9 @@
 (function(){
 	
-	var namespace = STATS3D.namespace("STATS3D.utils.loading");
+	var namespace = GRAPH3D.namespace("GRAPH3D.utils.loading");
 	
-	var EventDispatcher = STATS3D.namespace("STATS3D.utils.events").EventDispatcher;
-	var ListenerFunctions = STATS3D.namespace("STATS3D.utils.events").ListenerFunctions;
+	var EventDispatcher = GRAPH3D.namespace("GRAPH3D.utils.events").EventDispatcher;
+	var ListenerFunctions = GRAPH3D.namespace("GRAPH3D.utils.events").ListenerFunctions;
 	
 	if(namespace.TextLoader === undefined) {
 		
@@ -57,7 +57,7 @@
 		};
 		
 		p._onReadyStateChange = function _onReadyStateChange() {
-			console.log("STATS3D.utils.loading.TextLoader::_onReadyStateChange");
+			console.log("GRAPH3D.utils.loading.TextLoader::_onReadyStateChange");
 			console.log(this._url, this._loader.readyState, this._loader.status);
 			switch(this._loader.readyState) {
 				case 0: //Uninitialized

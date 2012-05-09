@@ -507,7 +507,7 @@ if(namespace.GraphView === undefined)
 		
 		this._dataProvider = data;
 		
-		var zMin = 1980;
+		var zMin = 1990;
 		//var zMin = data.time.minYear;
 		var zMax = 2010;
 		//var zMax = data.time.maxYear;
@@ -522,33 +522,34 @@ if(namespace.GraphView === undefined)
 		//this._axisTitles.yTitle = "Life Expectancy at Birth";
 		this._axisTitles.zTitle = "Time";
 		
-		// Compute Axes
-		this._xAxisViewModel.values = this._graphUtils.mapToAxis(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, numSteps, false);
-		this._yAxisViewModel.values = this._graphUtils.mapToAxis(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, numSteps, true, true);
-		this._zAxisViewModel.values = this._graphUtils.mapToAxis(zMin, zMax, numSteps, true);
+		var xAxisLog = true;
+		var yAxisLog = true;
+		var zAxisLog = false;
 		
-		/*
-		this._graphUtils.getLogOfBase(2, 10);
-		this._graphUtils.getLogOfBase(10, 10);
-		this._graphUtils.getLogOfBase(2, 2);
-		this._graphUtils.getLogOfBase(10, 2);
-		this._graphUtils.getLogOfBase(85000, 1.5);
-		this._graphUtils.getLogOfBase(85000, 1.8);
-		this._graphUtils.getLogOfBase(85000, 2);
-		this._graphUtils.getLogOfBase(85000, 3);
-		*/
-		/*
-		this._graphUtils.getLogOfBase(25, 10);
-		this._graphUtils.getLogOfBase(15, 10);
-		this._graphUtils.getLogOfBase(10, 10);
-		this._graphUtils.getLogOfBase(5, 10);
-		this._graphUtils.getLogOfBase(2.5, 10);
-		this._graphUtils.getLogOfBase(1, 10);
-		this._graphUtils.getLogOfBase(0.5, 10);
-		this._graphUtils.getLogOfBase(0.25, 10);
-		this._graphUtils.getLogOfBase(0.1, 10);
-		this._graphUtils.getLogOfBase(0.025, 10);
-		*/
+		// Compute Axes
+		if ( xAxisLog ) {
+			this._xAxisViewModel.values = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, 0, 10);
+			var vals  = this._xAxisViewModel.values;
+			console.log("X-AXIS input: minVal "+data[this._axisTitles.x].minValue+" maxVal "+data[this._axisTitles.x].maxValue+" numFractionalSteps "+0+" base "+10);
+			console.log("X-AXIS minVal "+vals.minVal+" maxVal "+vals.maxVal+" numSteps "+vals.numSteps+" numLogSteps "+vals.numLogSteps+" numFractionalSteps "+vals.numFractionalSteps+" base "+vals.base+" baseLog "+vals.baseLog); 
+		} else {
+			this._xAxisViewModel.values = this._graphUtils.mapToAxisLinear(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, numSteps, false);
+		}
+		
+		if ( yAxisLog ) {
+			this._yAxisViewModel.values = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, 2, 10);
+		} else {
+			this._yAxisViewModel.values = this._graphUtils.mapToAxisLinear(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, numSteps, true);
+		}
+		
+		if ( zAxisLog ) {
+		
+		} else {
+			this._zAxisViewModel.values = this._graphUtils.mapToAxisLinear(zMin, zMax, numSteps, true);
+		}
+		
+		//this._graphUtils.getLogOfBase(100, 10, true);
+
 		// RENDER
 		this.enable();
 		//console.log("Z (Time) axis minVal "+this._zAxisViewModel.values.minVal+" maxVal "+this._zAxisViewModel.values.maxVal);
@@ -558,7 +559,8 @@ if(namespace.GraphView === undefined)
 	{
 		// draw line for country
 		//this._plotData(data.countries["Lesotho"]);
-		var regionColors = [0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0x00FFFF, 0xFF00FF];
+		//					America	 East Asia  Europe    Mid East  S. Asia  S. Africa
+		var regionColors = [0xe5ff2f, 0xff2f2f, 0xff982f, 0x68ff5f, 0x2fbfe5, 0x3f4fff];
 		this._regionColors = {};
 		for ( var i = 0; i < this._dataProvider.regions.length; i ++ )
 		{
@@ -718,9 +720,20 @@ if(namespace.GraphView === undefined)
 				if ( x == 0 ) 	xpos = 0;
 				else {
 					var stepSize = this._axisLength / this._xAxisViewModel.values.numSteps;
-					var numStepsOffset = this._graphUtils.getLogOfBase( x, this._xAxisViewModel.values.base );
-					var xpos = numStepsOffset * stepSize;
-					xpos += this._xAxisViewModel.values.numFractionalSteps * stepSize;
+					var numFractionalSteps = this._xAxisViewModel.values.numFractionalSteps;
+					if ( numFractionalSteps ) 
+					{			
+						var numStepsOffset = this._graphUtils.getLogOfBase( x, this._xAxisViewModel.values.base ); // number of "steps" off from 1
+						var xpos = numStepsOffset * stepSize;
+						xpos += numFractionalSteps * stepSize;	// bump it up so 1 is the starting pos
+					} 
+					else
+					{
+						var base = this._xAxisViewModel.values.base;
+						var baseLog = this._xAxisViewModel.values.baseLog;
+						var numStepsOffset = this._graphUtils.getLogOfBase( x, base ); // number of "steps" off from 1
+						var xpos = (numStepsOffset-baseLog) * stepSize;
+					}
 					//console.log("x "+x+" xpos "+xpos+" stepSize "+stepSize+" numStepsOffset "+numStepsOffset);
 				}
 			} else  {

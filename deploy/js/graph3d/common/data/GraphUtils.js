@@ -26,15 +26,8 @@
 		{
 			
 		};
-
 		
-		p.mapToAxis = function mapToAxis( minVal, maxVal, numSteps, forceInt, logarithmic )
-		{
-			if (logarithmic) 	return this._mapToAxisLogarithmic(minVal, maxVal, numSteps, forceInt);
-			else				return this._mapToAxisLinear(minVal, maxVal, numSteps, forceInt);
-		}
-		
-		p._mapToAxisLinear = function _mapToAxisLinear(minVal, maxVal, numSteps, forceInt)
+		p.mapToAxisLinear = function mapToAxisLinear(minVal, maxVal, numSteps, forceInt)
 		{
 			var diff = maxVal - minVal;
 			var stepSize = diff / numSteps;
@@ -97,32 +90,52 @@
 			return { minVal: graphMinVal, maxVal:finalMaxVal , stepSize:stepSize, numSteps:maxNumSteps };		
 		}
 		
-		p._mapToAxisLogarithmic = function _mapToAxisLogarithmic(minVal, maxVal, numSteps, forceInt)
+		p.mapToAxisLogarithmic = function mapToAxisLogarithmic(minVal, maxVal, numFractionalSteps, base)
 		{
 			var diff = maxVal - minVal;
-			var base = 10;
 			
-			var numFractionalSteps = 2;
 			var numLogSteps = this.getLogOfBase(diff, base);
+			var baseLog = 0;
 			
 			// make sure that there's enough space to fit all values
 			numLogSteps = Math.ceil(numLogSteps);
 			
 			var finalMaxVal	= Math.pow(base, numLogSteps);
-			var graphMinVal = Math.pow(1/base, numFractionalSteps);
-			graphMinVal = Math.round(graphMinVal*100) / 100;	// round to 3 dp
+			graphMinVal = 0;
 			
-			numSteps = numLogSteps+numFractionalSteps;
+			if ( numFractionalSteps > 0 ) {
+				var multiplier = Math.pow( 10, numFractionalSteps ); // to round the number
+				var graphMinVal = Math.pow(1/base, numFractionalSteps);
+				graphMinVal = Math.round(graphMinVal*multiplier) / multiplier;
+			} else {
+				graphMinVal = Math.pow(base, Math.floor(this.getLogOfBase(minVal, base))); // min log step
+				
+				var newMaxVal = graphMinVal;
+				var numLogSteps = 0;
+				
+				while ( newMaxVal < maxVal ) {
+					newMaxVal *= base;
+					numLogSteps ++;
+				}
+				
+				baseLog = this.getLogOfBase(graphMinVal, base); // factors of the base greater than 1 (i.e. graphMinVal 100 & base 10 = baseLog 2)
+			}
 			
-			return { minVal: graphMinVal, maxVal:finalMaxVal , numSteps: numSteps, logarithmic: true, numLogSteps: numLogSteps, numFractionalSteps: numFractionalSteps, base: base };
+			var numSteps = numLogSteps+numFractionalSteps;
+			
+			return { minVal: graphMinVal, maxVal:finalMaxVal , numSteps: numSteps, logarithmic: true, numLogSteps: numLogSteps, numFractionalSteps: numFractionalSteps, base: base, baseLog: baseLog };
 		}
 		
-		p.getLogOfBase = function getLogOfBase(val, base)
+		p.getLogOfBase = function getLogOfBase(val, base, debug)
 		{
 			var result = Math.log(val) / Math.log(base);
 			//var r2 = Math.log(val) * Math.log(base);
-			//console.log("log of "+val+" base "+base+" = "+result);
-			//console.log("Starting at 1, it takes "+result+" steps to get to "+val+" when each step represents a multiplication of "+base);
+			
+			if (debug) {
+				console.log("log of "+val+" base "+base+" = "+result);
+				console.log("Starting at 1, it takes "+result+" steps to get to "+val+" when each step represents a multiplication of "+base);
+			}
+			
 			return result;
 		}
 		
@@ -134,16 +147,6 @@
 			
 			return ratio;
 		}
-		/*
-		p.getOffsetAlongAxisLogarithmic = function getOffsetAlongAxisLogarithmic(val, numFractionalSteps, numLogSteps, )
-		{
-			if ( numFractionalSteps > 0 ) {
-				if ( val < 1 ) {
-					
-				}
-			}
-		}
-		*/
 	}
 })();
 

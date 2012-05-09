@@ -93,8 +93,15 @@
 				
 				delay += 50;
 				
-				if ( this.values.logarithmic ) {
-					axisNum = Math.pow(2, i);
+				if ( this.values.logarithmic ) 
+				{
+					var numFractionalSteps = this.values.numFractionalSteps;
+					var multiplier = Math.pow( 10, numFractionalSteps - 1 ); // to round the number
+					if ( i < numFractionalSteps - 1 ) {
+						axisNum = Math.round( Math.pow( 1/this.values.base, numFractionalSteps - (i+1)) * multiplier ) / multiplier;
+					} else {
+						axisNum = Math.pow(this.values.base, (i+1)-numFractionalSteps);
+					} 
 				} else {
 					axisNum += this.values.stepSize;
 				}

@@ -100,21 +100,50 @@
 		p._mapToAxisLogarithmic = function _mapToAxisLogarithmic(minVal, maxVal, numSteps, forceInt)
 		{
 			var diff = maxVal - minVal;
+			var base = 10;
 			
-			var i = 0;
+			var numFractionalSteps = 2;
+			var numLogSteps = this.getLogOfBase(diff, base);
 			
-			while ( Math.pow(2, i) < diff )
-			{
-				i ++;
-			}
+			// make sure that there's enough space to fit all values
+			numLogSteps = Math.ceil(numLogSteps);
 			
-			console.log("i "+i+" pow "+Math.pow(2, i)+" diff "+diff);
+			var finalMaxVal	= Math.pow(base, numLogSteps);
+			var graphMinVal = Math.pow(1/base, numFractionalSteps);
+			graphMinVal = Math.round(graphMinVal*100) / 100;	// round to 3 dp
 			
-			var finalMaxVal	= Math.pow(2, i);
-			var graphMinVal = 0;
+			numSteps = numLogSteps+numFractionalSteps;
 			
-			return { minVal: graphMinVal, maxVal:finalMaxVal , numSteps:i, logarithmic: true };
+			return { minVal: graphMinVal, maxVal:finalMaxVal , numSteps: numSteps, logarithmic: true, numLogSteps: numLogSteps, numFractionalSteps: numFractionalSteps, base: base };
 		}
+		
+		p.getLogOfBase = function getLogOfBase(val, base)
+		{
+			var result = Math.log(val) / Math.log(base);
+			//var r2 = Math.log(val) * Math.log(base);
+			//console.log("log of "+val+" base "+base+" = "+result);
+			//console.log("Starting at 1, it takes "+result+" steps to get to "+val+" when each step represents a multiplication of "+base);
+			return result;
+		}
+		
+		p.getRatioAlongAxisLinear = function getRatioAlongAxisLinear(val, minVal, maxVal)
+		{
+			var diffFromZero = val - minVal;
+			var valueLengthOfAxis = maxVal - minVal;
+			var ratio = diffFromZero / valueLengthOfAxis;
+			
+			return ratio;
+		}
+		/*
+		p.getOffsetAlongAxisLogarithmic = function getOffsetAlongAxisLogarithmic(val, numFractionalSteps, numLogSteps, )
+		{
+			if ( numFractionalSteps > 0 ) {
+				if ( val < 1 ) {
+					
+				}
+			}
+		}
+		*/
 	}
 })();
 

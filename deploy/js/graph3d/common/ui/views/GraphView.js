@@ -507,26 +507,48 @@ if(namespace.GraphView === undefined)
 		
 		this._dataProvider = data;
 		
-		//var zMin = 1990;
-		var zMin = data.time.minYear;
-		//var zMax = 2010;
-		var zMax = data.time.maxYear;
+		var zMin = 1980;
+		//var zMin = data.time.minYear;
+		var zMax = 2010;
+		//var zMax = data.time.maxYear;
 		
 		this._axisTitles = {};
 		this._axisTitles.x = "gdpPerCapita";
-		//this._axisTitles.y = "hivPrevalence";
-		this._axisTitles.y = "lifeExpectancy";
+		this._axisTitles.y = "hivPrevalence";
+		//this._axisTitles.y = "lifeExpectancy";
 		this._axisTitles.z = "time";
 		this._axisTitles.xTitle = "GDP Per Capita (2005 Int $)";
-		//this._axisTitles.yTitle = "Estimated HIV Prevalence % (Ages 15-49)";
-		this._axisTitles.yTitle = "Life Expectancy at Birth";
+		this._axisTitles.yTitle = "Estimated HIV Prevalence % (Ages 15-49)";
+		//this._axisTitles.yTitle = "Life Expectancy at Birth";
 		this._axisTitles.zTitle = "Time";
 		
 		// Compute Axes
-		this._xAxisViewModel.values = this._graphUtils.mapToAxis(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, numSteps, false, true);
-		this._yAxisViewModel.values = this._graphUtils.mapToAxis(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, numSteps, true);
+		this._xAxisViewModel.values = this._graphUtils.mapToAxis(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, numSteps, false);
+		this._yAxisViewModel.values = this._graphUtils.mapToAxis(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, numSteps, true, true);
 		this._zAxisViewModel.values = this._graphUtils.mapToAxis(zMin, zMax, numSteps, true);
 		
+		/*
+		this._graphUtils.getLogOfBase(2, 10);
+		this._graphUtils.getLogOfBase(10, 10);
+		this._graphUtils.getLogOfBase(2, 2);
+		this._graphUtils.getLogOfBase(10, 2);
+		this._graphUtils.getLogOfBase(85000, 1.5);
+		this._graphUtils.getLogOfBase(85000, 1.8);
+		this._graphUtils.getLogOfBase(85000, 2);
+		this._graphUtils.getLogOfBase(85000, 3);
+		*/
+		/*
+		this._graphUtils.getLogOfBase(25, 10);
+		this._graphUtils.getLogOfBase(15, 10);
+		this._graphUtils.getLogOfBase(10, 10);
+		this._graphUtils.getLogOfBase(5, 10);
+		this._graphUtils.getLogOfBase(2.5, 10);
+		this._graphUtils.getLogOfBase(1, 10);
+		this._graphUtils.getLogOfBase(0.5, 10);
+		this._graphUtils.getLogOfBase(0.25, 10);
+		this._graphUtils.getLogOfBase(0.1, 10);
+		this._graphUtils.getLogOfBase(0.025, 10);
+		*/
 		// RENDER
 		this.enable();
 		//console.log("Z (Time) axis minVal "+this._zAxisViewModel.values.minVal+" maxVal "+this._zAxisViewModel.values.maxVal);
@@ -690,27 +712,52 @@ if(namespace.GraphView === undefined)
 			if (!y) 	y = prevYValue;
 			else		prevYValue = y;
 			
+			
 			// XPOS
-			var diffFromZero = x - this._xAxisViewModel.values.minVal;
-			var valueLengthOfAxis = this._xAxisViewModel.values.maxVal - this._xAxisViewModel.values.minVal;
-			var ratio = diffFromZero / valueLengthOfAxis;
-			
-			var xpos = ratio * this._axisLength;
-			
+			if ( this._xAxisViewModel.values.logarithmic ) {
+				if ( x == 0 ) 	xpos = 0;
+				else {
+					var stepSize = this._axisLength / this._xAxisViewModel.values.numSteps;
+					var numStepsOffset = this._graphUtils.getLogOfBase( x, this._xAxisViewModel.values.base );
+					var xpos = numStepsOffset * stepSize;
+					xpos += this._xAxisViewModel.values.numFractionalSteps * stepSize;
+					//console.log("x "+x+" xpos "+xpos+" stepSize "+stepSize+" numStepsOffset "+numStepsOffset);
+				}
+			} else  {
+				var ratio = this._graphUtils.getRatioAlongAxisLinear( x, this._xAxisViewModel.values.minVal, this._xAxisViewModel.values.maxVal );
+				var xpos = ratio * this._axisLength;			
+			}
+
 			// YPOS
-			var diffFromZero = y - this._yAxisViewModel.values.minVal;
-			var valueLengthOfAxis = this._yAxisViewModel.values.maxVal - this._yAxisViewModel.values.minVal;
-			var ratio = diffFromZero / valueLengthOfAxis;
-			
-			var ypos = ratio * this._axisLength;			
+			if ( this._yAxisViewModel.values.logarithmic ) {
+				if ( y == 0 ) 	ypos = 0;
+				else {
+					var stepSize = this._axisLength / this._yAxisViewModel.values.numSteps;
+					var numStepsOffset = this._graphUtils.getLogOfBase( y, this._yAxisViewModel.values.base );
+					var ypos = numStepsOffset * stepSize;
+					ypos += this._yAxisViewModel.values.numFractionalSteps * stepSize;
+					//console.log("y "+y+" ypos "+ypos+" stepSize "+stepSize+" numStepsOffset "+numStepsOffset);
+				}
+			} else  {			
+				var ratio = this._graphUtils.getRatioAlongAxisLinear( y, this._yAxisViewModel.values.minVal, this._yAxisViewModel.values.maxVal );
+				var ypos = ratio * this._axisLength;
+			}			
 
 			// ZPOS
-			var diffFromZero = z - this._zAxisViewModel.values.minVal;
-			var valueLengthOfAxis = this._zAxisViewModel.values.maxVal - this._zAxisViewModel.values.minVal;
-			var ratio = diffFromZero / valueLengthOfAxis;
+			if ( this._zAxisViewModel.values.logarithmic ) {
+				if ( z == 0 ) 	zpos = 0;
+				else {
+					var stepSize = this._axisLength / this._zAxisViewModel.values.numSteps;
+					var numStepsOffset = this._graphUtils.getLogOfBase( z, this._zAxisViewModel.values.base );
+					var zpos = numStepsOffset * stepSize;
+					zpos += this._zAxisViewModel.values.numFractionalSteps * stepSize;
+					//console.log("z "+z+" zpos "+zpos+" stepSize "+stepSize+" numStepsOffset "+numStepsOffset);
+				}			
+			} else  {
+				var ratio = this._graphUtils.getRatioAlongAxisLinear( z, this._zAxisViewModel.values.minVal, this._zAxisViewModel.values.maxVal );
+				var zpos = -ratio * this._axisLength;
+			}
 			
-			var zpos = -ratio * this._axisLength;
-
 			var pos = new THREE.Vector3( xpos, ypos, zpos );
 			particleGeom.vertices.push(pos);
 			lineGeom.vertices.push(pos);

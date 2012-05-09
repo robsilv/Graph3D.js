@@ -27,14 +27,15 @@ if(namespace.DataModel === undefined)
 		this._global = { regions:[], countries:{} };
 		
 		this._regionsLoadedCallback = ListenerFunctions.createListenerFunction(this, this._regionsLoaded);
-		this._populationLoadedCallback = ListenerFunctions.createListenerFunction(this, this._populationsLoaded);
-		this._hivLoadedCallback = ListenerFunctions.createListenerFunction(this, this._hivLoaded);
-		this._gdpLoadedCallback = ListenerFunctions.createListenerFunction(this, this._gdpLoaded);
+		this._tableLoadedCallback = ListenerFunctions.createListenerFunction(this, this._tableLoaded);
 		
 		this._regionsUrl = "../files/data/Geographic_Regions.csv";
-		this._populationUrl = "../files/data/Population.csv";
-		this._hivPrevUrl = "../files/data/Estimated_HIV_Prevalence_Ages_15-49.csv";
-		this._gdpPerCapitaUrl = "../files/data/GDP_per_capita_(1800-2010)_2005_Int_dollars.csv";
+
+		this._loadNum	= 0;
+		this._loadQueue = [ { title: "population", url: "../files/data/Population.csv" },
+							{ title: "hivPrevalence", url: "../files/data/Estimated_HIV_Prevalence_Ages_15-49.csv" },
+							{ title: "gdpPerCapita", url: "../files/data/GDP_per_capita_(1800-2010)_2005_Int_dollars.csv" },
+							{ title: "lifeExpectancy", url: "../files/data/Life_Expectancy_At_Birth.csv" }];
 	}
 	
 	p.destroy = function destroy() 
@@ -62,50 +63,45 @@ if(namespace.DataModel === undefined)
 	
 	p.load = function load()
 	{
-		this._regionsLoader = this._createLoader(this._regionsUrl, this._regionsLoadedCallback);
-		this._regionsLoader.load();	
+		this._csvLoader = this._createLoader(this._regionsUrl, this._regionsLoadedCallback);
+		this._csvLoader.load();	
 	}
 	
 	p._regionsLoaded = function _regionsLoaded(aEvent) 
 	{	
-		var data = this._regionsLoader.getData();
+		var data = this._csvLoader.getData();
 		//console.log("REGIONS LOADER DATA "+data);
 		
 		this._parseRegions(data);
 
-		this._populationLoader = this._createLoader(this._populationUrl, this._populationLoadedCallback);
-		this._populationLoader.load();		
+		this._loadNext();	
 	};
-	p._populationsLoaded = function _populationsLoaded(aEvent) 
+	
+	p._loadNext = function _loadNext()
+	{
+		this._currLoadObj = this._loadQueue[this._loadNum];
+		
+		if ( this._loadNum < this._loadQueue.length )
+		{
+			this._loadNum ++;
+			
+			this._csvLoader = this._createLoader(this._currLoadObj.url, this._tableLoadedCallback);
+			this._csvLoader.load();
+		} else {
+			this.dispatchEvent( { type:"loadComplete" } );
+		}
+	};
+	
+	p._tableLoaded = function _tableLoaded(aEvent) 
 	{	
-		var data = this._populationLoader.getData();
+		var data = this._csvLoader.getData();
 		//console.log("POPULATIONS LOADER DATA "+data);
-		
+
 		var scope = this;
-		this._parseTable(data, function(column, years, i) { scope._parsePopulation(column, years, i) });
-		
-		this._hivLoader = this._createLoader(this._hivPrevUrl, this._hivLoadedCallback);
-		this._hivLoader.load();
+		this._parseTable(data, function(column, years, i) { scope._parseColumn(scope._currLoadObj.title, column, years, i) });
+	
+		this._loadNext();
 	};
-	p._hivLoaded = function _hivLoaded(aEvent)
-	{
-		var data = this._hivLoader.getData();
-		
-		var scope = this;
-		this._parseTable(data, function(column, years, i) { scope._parseHIVPrev(column, years, i) });
-		
-		this._gdpLoader = this._createLoader(this._gdpPerCapitaUrl, this._gdpLoadedCallback);
-		this._gdpLoader.load();
-	}
-	p._gdpLoaded = function _gdpLoaded(aEvent)
-	{
-		var data = this._gdpLoader.getData();
-		
-		var scope = this;
-		this._parseTable(data, function(column, years, i) { scope._parseGDPPerCapita(column, years, i) });
-		
-		this.dispatchEvent( { type:"loadComplete" } );	
-	}
 	
 	p._cleanData = function _cleanData(data)
 	{
@@ -202,20 +198,6 @@ if(namespace.DataModel === undefined)
 		}
 		
 		return titles;
-	}
-	
-	p._parsePopulation = function _parsePopulation(column, years, i)
-	{
-		this._parseColumn("population", column, years, i);
-	}
-	
-	p._parseHIVPrev = function _parseHIVPrev(column, years, i)
-	{
-		this._parseColumn("hivPrevalence", column, years, i);
-	}
-	p._parseGDPPerCapita = function _parseGDPPerCapita(column, years, i)
-	{
-		this._parseColumn("gdpPerCapita", column, years, i);
 	}
 	
 	p._parseColumn = function _parseColumn(prop, column, years, i)

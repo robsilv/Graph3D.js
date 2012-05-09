@@ -63,7 +63,11 @@
 				this.container.add( markerObj );
 				this.markers.push( markerObj );
 				
-				markerObj.position = this._getAxisMarkerPos(i * (this._axisLength/numSteps));
+				//if ( this.values.logarithmic ) {
+				//	markerObj.position = this._getAxisMarkerPos(i * (this._axisLength/numSteps));
+				//} else {
+					markerObj.position = this._getAxisMarkerPos(i * (this._axisLength/numSteps));
+				//}
 				
 				var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 1 } ) );
 				
@@ -89,7 +93,11 @@
 				
 				delay += 50;
 				
-				axisNum += this.values.stepSize;
+				if ( this.values.logarithmic ) {
+					axisNum = Math.pow(2, i);
+				} else {
+					axisNum += this.values.stepSize;
+				}
 			}
 			
 			var text = this._createText(title, 20);

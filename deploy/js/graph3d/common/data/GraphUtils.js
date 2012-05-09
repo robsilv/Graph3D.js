@@ -28,11 +28,23 @@
 		};
 
 		
-		p.mapToAxis = function mapToAxis( minVal, maxVal, numSteps, forceInt )
+		p.mapToAxis = function mapToAxis( minVal, maxVal, numSteps, forceInt, logarithmic )
+		{
+			if (logarithmic) 	return this._mapToAxisLogarithmic(minVal, maxVal, numSteps, forceInt);
+			else				return this._mapToAxisLinear(minVal, maxVal, numSteps, forceInt);
+		}
+		
+		p._mapToAxisLinear = function _mapToAxisLinear(minVal, maxVal, numSteps, forceInt)
 		{
 			var diff = maxVal - minVal;
 			var stepSize = diff / numSteps;
-			var integerStrLength = stepSize.toString().split(".")[0].length;
+			
+			var numArray = stepSize.toString().split(".");
+			var integerStrLength = stepSize.toString().length;
+			if ( numArray ) {
+				integerStrLength = numArray[0].length;
+			}
+			
 			var stepSciNot = stepSize;
 			
 			for ( var i = 0; i < integerStrLength; i ++ )
@@ -82,8 +94,40 @@
 			
 			console.log("minVal "+minVal+" maxVal "+maxVal+" numSteps "+maxNumSteps+" stepSize "+stepSize);
 			
+			return { minVal: graphMinVal, maxVal:finalMaxVal , stepSize:stepSize, numSteps:maxNumSteps };		
+		}
+		
+		p._mapToAxisLogarithmic = function _mapToAxisLogarithmic(minVal, maxVal, numSteps, forceInt)
+		{
+			var diff = maxVal - minVal;
 			
-			return { minVal: graphMinVal, maxVal:finalMaxVal , stepSize:stepSize, numSteps:maxNumSteps }; 
+			var i = 0;
+			
+			while ( Math.pow(2, i) < diff )
+			{
+				i ++;
+			}
+			
+			console.log("i "+i+" pow "+Math.pow(2, i)+" diff "+diff);
+			
+			var finalMaxVal	= Math.pow(2, i);
+			var graphMinVal = 0;
+			
+			return { minVal: graphMinVal, maxVal:finalMaxVal , numSteps:i, logarithmic: true };
 		}
 	}
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+

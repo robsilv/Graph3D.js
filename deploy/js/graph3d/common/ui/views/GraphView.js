@@ -507,18 +507,27 @@ if(namespace.GraphView === undefined)
 		
 		this._dataProvider = data;
 		
-		var zMin = 1990;//data.time.minYear;
-		var zMax = 2010;//data.time.maxYear;
+		//var zMin = 1990;
+		var zMin = data.time.minYear;
+		//var zMax = 2010;
+		var zMax = data.time.maxYear;
 		
-		// Compute X-Axis (GDP)
-		this._xAxisViewModel.values = this._graphUtils.mapToAxis(data.gdpPerCapita.minValue, data.gdpPerCapita.maxValue, numSteps);
-		// Compute Y-Axis (HIV)
-		this._yAxisViewModel.values = this._graphUtils.mapToAxis(data.hivPrevalence.minValue, data.hivPrevalence.maxValue, numSteps, true);
-		// Compute Z-Axis (Time)
+		this._axisTitles = {};
+		this._axisTitles.x = "gdpPerCapita";
+		//this._axisTitles.y = "hivPrevalence";
+		this._axisTitles.y = "lifeExpectancy";
+		this._axisTitles.z = "time";
+		this._axisTitles.xTitle = "GDP Per Capita (2005 Int $)";
+		//this._axisTitles.yTitle = "Estimated HIV Prevalence % (Ages 15-49)";
+		this._axisTitles.yTitle = "Life Expectancy at Birth";
+		this._axisTitles.zTitle = "Time";
+		
+		// Compute Axes
+		this._xAxisViewModel.values = this._graphUtils.mapToAxis(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, numSteps, false, true);
+		this._yAxisViewModel.values = this._graphUtils.mapToAxis(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, numSteps, true);
 		this._zAxisViewModel.values = this._graphUtils.mapToAxis(zMin, zMax, numSteps, true);
 		
 		// RENDER
-		
 		this.enable();
 		//console.log("Z (Time) axis minVal "+this._zAxisViewModel.values.minVal+" maxVal "+this._zAxisViewModel.values.maxVal);
 	}
@@ -538,81 +547,142 @@ if(namespace.GraphView === undefined)
 			this._regionColors[region.name] = color;
 		}
 		
+		this._linesData = { countriesTable: {}, countriesArray: [] };
+		
 		for ( var countryName in this._dataProvider.countries ) 
 		{
 			var country = this._dataProvider.countries[countryName];
 			color = this._regionColors[country.region.name];
 			//var color = new THREE.Color();
 			//color.setHSV(Math.random(), 1.0, 1.0);
-			this._plotLine(country, color);
-		}	
+			var lineValues = this._plotLine(country, color, this._axisTitles.x, this._axisTitles.y);
+			lineValues.color = color;
+			
+			this._linesData.countriesTable[countryName] = lineValues;
+			this._linesData.countriesArray.push(lineValues);
+		}
+		
+		this._renderAllLines();
+		//this._renderLineByLine();
 	}
 	
-	p._plotLine = function _plotLine(data, color)
+	// Renders all line immediately
+	p._renderAllLines = function _renderAllLines()
+	{
+		for ( var countryName in this._linesData.countriesTable ) 
+		{
+			var lineValues = this._linesData.countriesTable[countryName];
+			
+			if (!lineValues.line) {
+				lineValues.line = this._createLine(lineValues.lineGeom, lineValues.color);
+				this._graphObj.add( lineValues.line );
+			}
+			
+			if (!lineValues.particles) {
+				lineValues.particles = this._createParticles(lineValues.particleGeom);
+				this._graphObj.add(lineValues.particles);
+			}
+		}
+	}
+	
+	// Renders each line one by one, point by point
+	p._renderLineByLine = function _renderLineByLine()
+	{
+		this._countryCount = 0;
+		this._currentParticleIndex = 0;
+		
+		var scope = this;
+		this._renderDataInterval = setInterval( function() { scope._renderLineByLineInterval() }, 40);
+	}
+	p._renderLineByLineInterval = function _renderLineByLineInterval()
+	{
+		if ( this._countryCount == this._linesData.countriesArray.length - 1 )
+		{
+			clearInterval(this._renderDataInterval);
+		}
+		
+		//var lineValues = this._linesData.countriesTable["Lesotho"];//countryName];
+		var lineValues = this._linesData.countriesArray[this._countryCount];//countryName];
+		
+		if ( this._currentParticleIndex < lineValues.particleGeom.vertices.length + 1 ) 
+		{
+			lineValues.particleGeomCurrent = new THREE.Geometry();
+			lineValues.particleGeomCurrent.colors = lineValues.particleGeom.colors;
+				
+			lineValues.lineGeomCurrent = new THREE.Geometry();
+			
+			for ( var i = 0; i < this._currentParticleIndex; i ++ )
+			{
+				var vector3 = lineValues.lineGeom.vertices[i];
+				lineValues.lineGeomCurrent.vertices.push(vector3);
+				
+				var vector3 = lineValues.particleGeom.vertices[i];
+				lineValues.particleGeomCurrent.vertices.push(vector3);
+			}
+			
+			if (lineValues.line)	this._graphObj.remove( lineValues.line );
+			lineValues.line = this._createLine(lineValues.lineGeomCurrent, lineValues.color);
+			this._graphObj.add( lineValues.line );
+			
+			if (lineValues.particles)	this._graphObj.remove( lineValues.particles );
+			lineValues.particles = this._createParticles(lineValues.particleGeomCurrent);
+			this._graphObj.add(lineValues.particles);
+
+			this._currentParticleIndex ++;
+		} else {
+			this._currentParticleIndex = 0;
+			this._countryCount ++;
+		}
+	}
+	
+	p._plotLine = function _plotLine(data, color, xTitle, yTitle)
 	{
 		var minZ = this._zAxisViewModel.values.minVal;
 		var maxZ = this._zAxisViewModel.values.maxVal;
-		
-		var x = "gdpPerCapita";
-		var y = "hivPrevalence";
 		
 		// massage data
 		// Z-Axis is the axis that X and Y data are plotted against.
 		// Loop through the X and Y axes values for the line, storing them on a new object in terms of Z.
 		
-		var zValuesObj = {};
-		for ( var z in data[x] )
+		var lineValues = { z: {} };
+		for ( var zVal in data[xTitle] )
 		{
-			if ( z < minZ || z > maxZ ) continue;
+			if ( zVal < minZ || zVal > maxZ ) continue;
 			
-			var value = data[x][z];
+			var value = data[xTitle][zVal];
 			
-			if (!zValuesObj[z]) {
-				zValuesObj[z] = {};
+			if (!lineValues.z[zVal]) {
+				lineValues.z[zVal] = {};
 			}
 			
-			zValuesObj[z].x = value;
+			lineValues.z[zVal].x = value;
 		}
 		
-		for ( var z in data[y] )
+		for ( var zVal in data[yTitle] )
 		{
-			if ( z < minZ || z > maxZ ) continue;
+			if ( zVal < minZ || zVal > maxZ ) continue;
 			
-			var value = data[y][z];
-			if (!zValuesObj[z]) {
-				zValuesObj[z] = {};
+			var value = data[yTitle][zVal];
+			if (!lineValues.z[zVal]) {
+				lineValues.z[zVal] = {};
 			}
 			
-			zValuesObj[z].y = value;
+			lineValues.z[zVal].y = value;
 		}
-		
-		
 		
 		var colors = [];
 		
 		//init Particles
 		var lineGeom = new THREE.Geometry();
 		var particleGeom = new THREE.Geometry();
-		//create one shared material
-		
-		var sprite = THREE.ImageUtils.loadTexture("../files/img/particle2.png");
-		material = new THREE.ParticleBasicMaterial({
-			size: 5,
-			sizeAttenuation: false,
-			map: sprite,
-			//blending: THREE.AdditiveBlending,
-			depthTest: false,
-			transparent: true,
-			vertexColors: true //allows 1 color per particle
-		});		
-		
+
 		var prevYValue = 0;
 		var prevXValue = 0;
 		
-		for ( var z in zValuesObj )
+		for ( var z in lineValues.z )
 		{
-			var x = zValuesObj[z].x;
-			var y = zValuesObj[z].y;
+			var x = lineValues.z[z].x;
+			var y = lineValues.z[z].y;
 			//console.log(z+" = "+value);
 					
 			if (!x) 	x = prevXValue;
@@ -650,14 +720,40 @@ if(namespace.GraphView === undefined)
 		
 		particleGeom.colors = colors;
 		
-		//init particle system
-		var particles = new THREE.ParticleSystem(particleGeom, material);
-		particles.sortParticles = false;
-		this._graphObj.add(particles);		
+		lineValues.lineGeom = lineGeom;
+		lineValues.particleGeom = particleGeom;
+		//lineValues.color = color;
 		
+		return lineValues;
+	}
+	
+	p._createLine = function _createLine(geom, color)
+	{
 		// lines
-		var line = new THREE.Line( lineGeom, new THREE.LineBasicMaterial( { color: color.getHex(), opacity: 0.5 } ) );
-		this._graphObj.add( line );
+		var line = new THREE.Line( geom, new THREE.LineBasicMaterial( { color: color.getHex(), opacity: 0.5 } ) );
+		
+		return line;
+	}
+	
+	p._createParticles = function _createParticles(geom)
+	{
+		//create one shared material
+		var sprite = THREE.ImageUtils.loadTexture("../files/img/particle2.png");
+		var material = new THREE.ParticleBasicMaterial({
+			size: 5,
+			sizeAttenuation: false,
+			map: sprite,
+			//blending: THREE.AdditiveBlending,
+			depthTest: false,
+			transparent: true,
+			vertexColors: true //allows 1 color per particle
+		});
+		
+		//init particle system
+		var particles = new THREE.ParticleSystem(geom, material);
+		particles.sortParticles = false;
+		
+		return particles;
 	}
 	
 	// RENDER AXES =================================
@@ -714,9 +810,9 @@ if(namespace.GraphView === undefined)
 			delay += 500;		
 		}
 
-		this._xAxisViewModel.renderAxis(delay, "GDP Per Capita (2005 Int $)", this._graphObj);
-		this._yAxisViewModel.renderAxis(delay += 500, "Estimated HIV Prevalence % (Ages 15-49)", this._graphObj);
-		this._zAxisViewModel.renderAxis(delay += 500, "Time", this._graphObj);
+		this._xAxisViewModel.renderAxis(delay, this._axisTitles.xTitle, this._graphObj);
+		this._yAxisViewModel.renderAxis(delay += 500, this._axisTitles.yTitle, this._graphObj);
+		this._zAxisViewModel.renderAxis(delay += 500, this._axisTitles.zTitle, this._graphObj);
 	}
 	
 	// RENDER GRIDS =========================================

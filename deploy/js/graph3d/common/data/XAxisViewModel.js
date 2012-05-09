@@ -37,6 +37,10 @@
 		{
 			return new THREE.Vector3(step, 0, 0);
 		}
+		p._getAxisMarkerPosLog = function _getAxisMarkerPosLog(step)
+		{
+			return new THREE.Vector3(step, 0, 0);
+		}
 		
 		p._getMarkerInitState = function _getMarkerInitState(text)
 		{

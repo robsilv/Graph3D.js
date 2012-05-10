@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Graph3D.js: example 1</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		
+		<!-- Libs -->
+		<script type="application/javascript" src="../js/libs/tween.js/build/Tween.js"></script>
+		<!--<script type="application/javascript" src="../js/libs/three.js/build/Three.js"></script>-->
+		
+		
+		<!-- THREE.js -->
+		<script src="../js/libs/three.js/src/Three.js"></script>
+		 
+		<script src="../js/libs/three.js/src/core/Vector3.js"></script>
+		<script src="../js/libs/three.js/src/core/Matrix3.js"></script>
+		<script src="../js/libs/three.js/src/core/Matrix4.js"></script>
+		<script src="../js/libs/three.js/src/core/Quaternion.js"></script>
+		<script src="../js/libs/three.js/src/core/Object3D.js"></script>
+		 
+		<!-- cameras -->
+		<script src="../js/libs/three.js/src/cameras/Camera.js"></script>
+		<script src="../js/libs/three.js/src/cameras/OrthographicCamera.js"></script>
+		<script src="../js/libs/three.js/src/cameras/PerspectiveCamera.js"></script>
+		<!-- core -->
+		<script src="../js/libs/three.js/src/core/Color.js"></script>
+		<script src="../js/libs/three.js/src/core/Face3.js"></script>
+		<script src="../js/libs/three.js/src/core/Face4.js"></script>
+		<script src="../js/libs/three.js/src/core/Frustum.js"></script>
+		<script src="../js/libs/three.js/src/core/Geometry.js"></script>
+		<script src="../js/libs/three.js/src/core/Math.js"></script>
+		<script src="../js/libs/three.js/src/core/Projector.js"></script>
+		<script src="../js/libs/three.js/src/core/Rectangle.js"></script>
+		<script src="../js/libs/three.js/src/core/UV.js"></script>
+		<script src="../js/libs/three.js/src/core/Vector2.js"></script>
+		<script src="../js/libs/three.js/src/core/Vector4.js"></script>
+		<script src="../js/libs/three.js/src/core/Vertex.js"></script>
+		<!-- extras -->
+		<script src="../js/libs/three.js/src/extras/ColorUtils.js"></script>
+		<script src="../js/libs/three.js/src/extras/GeometryUtils.js"></script>
+		<script src="../js/libs/three.js/src/extras/ImageUtils.js"></script>
+		<script src="../js/libs/three.js/src/extras/SceneUtils.js"></script>
+		<script src="../js/libs/three.js/src/extras/ShaderUtils.js"></script>
+		<!-- extras/geometries -->
+		<script src="../js/libs/three.js/src/extras/geometries/ExtrudeGeometry.js"></script>
+		<script src="../js/libs/three.js/src/extras/geometries/CubeGeometry.js"></script>
+		<script src="../js/libs/three.js/src/extras/geometries/PlaneGeometry.js"></script>
+		<script src="../js/libs/three.js/src/extras/geometries/TextGeometry.js"></script>
+		<!-- extras/core -->		
+		<script src="../js/libs/three.js/src/extras/core/BufferGeometry.js"></script>
+		<script src="../js/libs/three.js/src/extras/core/Curve.js"></script>
+		<script src="../js/libs/three.js/src/extras/core/CurvePath.js"></script>
+		<script src="../js/libs/three.js/src/extras/core/Path.js"></script>
+		<script src="../js/libs/three.js/src/extras/core/Shape.js"></script>
+		<script src="../js/libs/three.js/src/extras/core/TextPath.js"></script>		
+		<!-- extras/shaders -->
+		<script src="../js/libs/three.js/src/extras/shaders/ShaderSprite.js"></script>
+		<script src="../js/libs/three.js/src/extras/shaders/ShaderFlares.js"></script>
+		<!-- extras/objects -->
+		<script src="../js/libs/three.js/src/extras/objects/ImmediateRenderObject.js"></script>
+		<script src="../js/libs/three.js/src/extras/objects/LensFlare.js"></script>
+		<!-- extras/renderers/plugins -->
+		<script src="../js/libs/three.js/src/extras/renderers/plugins/ShadowMapPlugin.js"></script>
+		<script src="../js/libs/three.js/src/extras/renderers/plugins/SpritePlugin.js"></script>
+		<script src="../js/libs/three.js/src/extras/renderers/plugins/LensFlarePlugin.js"></script>
+		<!-- lights -->
+		<script src="../js/libs/three.js/src/lights/Light.js"></script>
+		<script src="../js/libs/three.js/src/lights/AmbientLight.js"></script>
+		<script src="../js/libs/three.js/src/lights/DirectionalLight.js"></script>
+		<script src="../js/libs/three.js/src/lights/PointLight.js"></script>
+		<script src="../js/libs/three.js/src/lights/SpotLight.js"></script>
+		<!-- materials -->
+		<script src="../js/libs/three.js/src/materials/Material.js"></script>
+		<script src="../js/libs/three.js/src/materials/MeshBasicMaterial.js"></script>
+		<script src="../js/libs/three.js/src/materials/MeshFaceMaterial.js"></script>
+		<script src="../js/libs/three.js/src/materials/ShaderMaterial.js"></script>
+		<script src="../js/libs/three.js/src/materials/LineBasicMaterial.js"></script>
+		<script src="../js/libs/three.js/src/materials/MeshDepthMaterial.js"></script>
+		<script src="../js/libs/three.js/src/materials/MeshLambertMaterial.js"></script>
+		<script src="../js/libs/three.js/src/materials/MeshNormalMaterial.js"></script>
+		<script src="../js/libs/three.js/src/materials/MeshPhongMaterial.js"></script>
+		<script src="../js/libs/three.js/src/materials/ParticleBasicMaterial.js"></script>
+		<script src="../js/libs/three.js/src/materials/ParticleCanvasMaterial.js"></script>
+		<script src="../js/libs/three.js/src/materials/ParticleDOMMaterial.js"></script>
+		<!-- objects -->
+		<script src="../js/libs/three.js/src/objects/Bone.js"></script>
+		<script src="../js/libs/three.js/src/objects/Line.js"></script>
+		<script src="../js/libs/three.js/src/objects/LOD.js"></script>
+		<script src="../js/libs/three.js/src/objects/Mesh.js"></script>
+		<script src="../js/libs/three.js/src/objects/MorphAnimMesh.js"></script>
+		<script src="../js/libs/three.js/src/objects/Particle.js"></script>
+		<script src="../js/libs/three.js/src/objects/ParticleSystem.js"></script>
+		<script src="../js/libs/three.js/src/objects/Ribbon.js"></script>
+		<script src="../js/libs/three.js/src/objects/SkinnedMesh.js"></script>
+		<script src="../js/libs/three.js/src/objects/Sprite.js"></script>
+		<!-- textures -->
+		<script src="../js/libs/three.js/src/textures/Texture.js"></script>	
+		<script src="../js/libs/three.js/src/textures/DataTexture.js"></script>	
+		<!-- renderers -->
+		<script src="../js/libs/three.js/src/renderers/WebGLRenderer.js"></script>
+		<script src="../js/libs/three.js/src/renderers/WebGLShaders.js"></script>
+		<script src="../js/libs/three.js/src/renderers/WebGLRenderTarget.js"></script>
+		<script src="../js/libs/three.js/src/renderers/WebGLRenderTargetCube.js"></script>
+		<!-- renderers/renderables -->
+		<script src="../js/libs/three.js/src/renderers/renderables/RenderableFace3.js"></script>
+		<script src="../js/libs/three.js/src/renderers/renderables/RenderableFace4.js"></script>
+		<script src="../js/libs/three.js/src/renderers/renderables/RenderableLine.js"></script>
+		<script src="../js/libs/three.js/src/renderers/renderables/RenderableObject.js"></script>
+		<script src="../js/libs/three.js/src/renderers/renderables/RenderableParticle.js"></script>
+		<script src="../js/libs/three.js/src/renderers/renderables/RenderableVertex.js"></script>
+		<!-- scenes -->
+		<script src="../js/libs/three.js/src/scenes/Fog.js"></script>			
+		<script src="../js/libs/three.js/src/scenes/FogExp2.js"></script>			
+		<script src="../js/libs/three.js/src/scenes/Scene.js"></script>	
+
+		
+		
+		<script type="application/javascript" src="../js/libs/three.js/src/extras/cameras/CombinedCamera.js"></script>
+		<script type="application/javascript" src="../js/libs/three.js/examples/js/Stats.js"></script>
+		
+		<!-- Global -->
+		<script type="application/javascript" src="../js/graph3d/Graph3D.js"></script>
+		
+		<!-- Utils -->
+		<script type="application/javascript" src="../js/graph3d/utils/events/ListenerFunctions.js"></script>
+		<script type="application/javascript" src="../js/graph3d/utils/events/EventDispatcher.js"></script>
+		<script type="application/javascript" src="../js/graph3d/utils/loading/TextLoader.js"></script>
+		
+		<!-- Common -->
+		<script type="application/javascript" src="../js/graph3d/common/data/DataModel.js"></script>
+		<script type="application/javascript" src="../js/graph3d/common/data/GraphUtils.js"></script>
+		<script type="application/javascript" src="../js/graph3d/common/data/AxisViewModel.js"></script>
+		<script type="application/javascript" src="../js/graph3d/common/data/XAxisViewModel.js"></script>
+		<script type="application/javascript" src="../js/graph3d/common/data/YAxisViewModel.js"></script>
+		<script type="application/javascript" src="../js/graph3d/common/data/ZAxisViewModel.js"></script>
+		<script type="application/javascript" src="../js/graph3d/common/ui/views/GraphView.js"></script>
+		
+		<!-- This example's JS -->
+		<script type="application/javascript" src="../js/graph3d/examples/example1/Main.js"></script>
+		
+		
+		<!-- load the font file from canvas-text -->
+		<script type="application/javascript" src="../files/fonts/helvetiker_regular.typeface.js"></script>
+		
+		<!-- Global CSS -->	
+		
+		<!-- This example's CSS -->
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+				color: purple;
+			}
+
+			a {
+				color: red;
+			}
+		</style>		
+	</head>
+	<body>
+	
+		<div style="position: absolute; top: 10px; width: 100%; text-align: center; ">
+
+			Views:
+				<button id="bottomView">Bottom View (X &amp; Z)</button>
+				<button id="rightView">Right View (Y &amp; Z)</button>
+				<button id="frontView">Front View (X &amp; Y)</button>
+				<button id="overView">Free View</button>
+		</div>
+
+	</body>
+</html>

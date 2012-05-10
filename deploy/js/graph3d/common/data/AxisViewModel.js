@@ -20,6 +20,14 @@
 		
 		p._init = function _init(axisLength, defaultTextSize) 
 		{
+			// Styling
+			
+			this._textColor = 0xAAAAAA;
+			this._markerLineColor = 0xCCCCCC;
+			this._markerLineOpacity = 1;
+			
+			//
+			
 			this._axisLength = axisLength;
 			this._defaultTextSize = defaultTextSize;
 			
@@ -63,13 +71,9 @@
 				this.container.add( markerObj );
 				this.markers.push( markerObj );
 				
-				//if ( this.values.logarithmic ) {
-				//	markerObj.position = this._getAxisMarkerPos(i * (this._axisLength/numSteps));
-				//} else {
-					markerObj.position = this._getAxisMarkerPos(i * (this._axisLength/numSteps));
-				//}
+				markerObj.position = this._getAxisMarkerPos(i * (this._axisLength/numSteps));
 				
-				var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 1 } ) );
+				var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: this._markerLineColor, opacity: this._markerLineOpacity } ) );
 				
 				markerObj.add( line );
 				this.lines.push(line);
@@ -161,7 +165,7 @@
 			var centerOffset = -0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
 			var rightOffset = -1 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
 			
-			var textMaterial = new THREE.MeshBasicMaterial( { color:  0x000000, overdraw: true } );
+			var textMaterial = new THREE.MeshBasicMaterial( { color:  this._textColor, overdraw: true } );
 			var text = new THREE.Mesh( geometry, textMaterial );
 
 			text.doubleSided = false;
@@ -257,16 +261,6 @@
 							vector3.x = markers[i].yAxisLength;
 							line.geometry.verticesNeedUpdate = true;
 						}
-						/*
-						// Markers on the Z-Axis are lines along the X
-						if (!isNaN(markers[i].yAxisLength)) 
-						{
-							var line = markerObj.children[0];
-							var vector3 = line.geometry.vertices[0];					
-							vector3.x = markers[i].yAxisLength;
-							line.geometry.verticesNeedUpdate = true;
-						}
-						*/
 						
 						var text = markerObj.children[1];
 						if (!isNaN(markers[i].opacity))		text.children[0].material.opacity = markers[i].opacity;

@@ -34,6 +34,13 @@ if(namespace.GraphView === undefined)
 	
 	p._init = function _init()
 	{
+		// Styles
+		
+		this._gridLineColor = 0x444444;
+		this._gridLineOpacity = 1;
+		
+		//
+		
 		this._defaultTextSize = 16;
 		this._axisLength = 1000;
 		
@@ -152,12 +159,16 @@ if(namespace.GraphView === undefined)
 		this._frontViewButton = document.getElementById("frontView");
 		this._overViewButton = document.getElementById("overView");
 		
+		this._startButton = document.getElementById("startBtn");
+		
 		var scope = this;
 		
 		this._bottomViewButton.addEventListener( "click", function() { scope.toBottomView(); } );
 		this._rightViewButton.addEventListener( "click", function() { scope.toRightView(); } );
 		this._frontViewButton.addEventListener( "click", function() { scope.toFrontView(); } );
 		this._overViewButton.addEventListener( "click", function() { scope.toOverView(); } );
+		
+		this._startButton.addEventListener( "click", function() { scope._stepThroughZAxis(); } );
 		
 		this._targetRotationY = 0;
 		this._targetRotationYOnMouseDown = 0;
@@ -339,7 +350,6 @@ if(namespace.GraphView === undefined)
 		this._xAxisViewModel.axisToDefaultView();
 		this._yAxisViewModel.axisToDefaultView();
 		this._zAxisViewModel.axisToRightView();
-		//this._zAxisViewModel.axisToDefaultView();
 		
 		//if (this._xAxisViewModel) 	this._graphObj.add(this._xAxisViewModel.container);
 		//if (this._yAxisViewModel) 	this._graphObj.add(this._yAxisViewModel);
@@ -359,7 +369,6 @@ if(namespace.GraphView === undefined)
 		
 		this._xAxisViewModel.axisToDefaultView();
 		this._yAxisViewModel.axisToDefaultView();
-		//this._zAxisViewModel.axisToRightView();
 		this._zAxisViewModel.axisToDefaultView();
 		
 		//if (this._xAxisViewModel) 	this._graphObj.add(this._xAxisViewModel.container);
@@ -530,8 +539,8 @@ if(namespace.GraphView === undefined)
 		if ( xAxisLog ) {
 			this._xAxisViewModel.values = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, 0, 10);
 			var vals  = this._xAxisViewModel.values;
-			console.log("X-AXIS input: minVal "+data[this._axisTitles.x].minValue+" maxVal "+data[this._axisTitles.x].maxValue+" numFractionalSteps "+0+" base "+10);
-			console.log("X-AXIS minVal "+vals.minVal+" maxVal "+vals.maxVal+" numSteps "+vals.numSteps+" numLogSteps "+vals.numLogSteps+" numFractionalSteps "+vals.numFractionalSteps+" base "+vals.base+" baseLog "+vals.baseLog); 
+			//console.log("X-AXIS input: minVal "+data[this._axisTitles.x].minValue+" maxVal "+data[this._axisTitles.x].maxValue+" numFractionalSteps "+0+" base "+10);
+			//console.log("X-AXIS minVal "+vals.minVal+" maxVal "+vals.maxVal+" numSteps "+vals.numSteps+" numLogSteps "+vals.numLogSteps+" numFractionalSteps "+vals.numFractionalSteps+" base "+vals.base+" baseLog "+vals.baseLog); 
 		} else {
 			this._xAxisViewModel.values = this._graphUtils.mapToAxisLinear(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, numSteps, false);
 		}
@@ -586,8 +595,9 @@ if(namespace.GraphView === undefined)
 			this._linesData.countriesArray.push(lineValues);
 		}
 		
-		this._renderAllLines();
+		//this._renderAllLines();
 		//this._renderLineByLine();
+		//this._stepThroughZAxis();
 	}
 	
 	// Renders all line immediately
@@ -609,15 +619,94 @@ if(namespace.GraphView === undefined)
 		}
 	}
 	
+	p._stepThroughZAxis = function _stepThroughZAxis()
+	{
+		clearInterval(this._renderDataInterval);
+		
+		this._currentZIndex = 0;
+		
+		var scope = this;
+		this._renderDataInterval = setInterval( function() { scope._renderZSlice() }, 1000);
+		
+		//scope._renderZSlice();
+	}
+	
+	
+	p._renderZSlice = function _renderZSlice()
+	{
+		// Each country needs it's own particle system (PS)
+		// The PS will contain only one particle, which will animate it's position and size over time (all particles in a PS must be the same size)
+		// The PS's will be stored in a table using the country name as a key.
+		// The object containing the PS will also contain other values, e.g. animation values: targetSize and a targetPosition
+		// An object will be added to the table for each country as required
+		// On each _renderZSlice() call, each particle will be prompted to tween to its target values
+		// The tweens will take slightly less time to complete than the time taken between _renderZSlice() calls
+		
+		if (!this._particleGeomCurrent) {
+			this._particleGeomCurrent = new THREE.Geometry();
+			this._particleGeomCurrent.colors = [];
+		}
+		
+		var index = 0;
+		
+		console.log("_renderZSlice "+this._currentZIndex);
+		
+		//Loop through countries
+		for ( var countryName in this._linesData.countriesTable ) 
+		{
+			// get the line data (geom, color) for the country
+			var lineValsForCountry = this._linesData.countriesTable[countryName];
+
+			// get the vector3 point at the currentParticleIndex (this step on the Z slice)
+			var vector3 = lineValsForCountry.particleGeom.vertices[this._currentZIndex];
+			// If the country has a particle for this step, add it to the current geom and step the index.
+			// If it doesn't, skip the country.
+			if ( vector3 ) 
+			{
+				if (!this._particleGeomCurrent.vertices[index]) {
+					this._particleGeomCurrent.vertices[index] = vector3.clone();
+				} else {
+					var currVector3 = this._particleGeomCurrent.vertices[index];
+					currVector3.x = vector3.x;
+					currVector3.y = vector3.y;
+					currVector3.z = vector3.z;
+				}
+				this._particleGeomCurrent.colors[index] = lineValsForCountry.particleGeom.colors[this._currentZIndex];
+				
+				index ++;
+			} else {
+				console.log("NO VECTOR "+countryName);
+			}
+		}
+		
+		if (!this._particles) {
+			this._particles = this._createParticles(this._particleGeomCurrent);
+			this._graphObj.add(this._particles);
+		}
+		
+		//this._particles.geometry = this._particleGeomCurrent;
+		this._particleGeomCurrent.verticesNeedUpdate = true;
+		this._particles.material.size = 20;
+		
+		var vertices = lineValsForCountry.particleGeom.vertices;
+		if ( this._currentZIndex < vertices.length + 1 )
+		{
+			this._currentZIndex ++;			
+		} else {
+			clearInterval(this._renderDataInterval);
+		}
+	}
+	
 	// Renders each line one by one, point by point
 	p._renderLineByLine = function _renderLineByLine()
 	{
 		this._countryCount = 0;
-		this._currentParticleIndex = 0;
+		this._currentZIndex = 0;
 		
 		var scope = this;
 		this._renderDataInterval = setInterval( function() { scope._renderLineByLineInterval() }, 40);
 	}
+	
 	p._renderLineByLineInterval = function _renderLineByLineInterval()
 	{
 		if ( this._countryCount == this._linesData.countriesArray.length - 1 )
@@ -628,14 +717,14 @@ if(namespace.GraphView === undefined)
 		//var lineValues = this._linesData.countriesTable["Lesotho"];//countryName];
 		var lineValues = this._linesData.countriesArray[this._countryCount];//countryName];
 		
-		if ( this._currentParticleIndex < lineValues.particleGeom.vertices.length + 1 ) 
+		if ( this._currentZIndex < lineValues.particleGeom.vertices.length + 1 ) 
 		{
 			lineValues.particleGeomCurrent = new THREE.Geometry();
 			lineValues.particleGeomCurrent.colors = lineValues.particleGeom.colors;
 				
 			lineValues.lineGeomCurrent = new THREE.Geometry();
 			
-			for ( var i = 0; i < this._currentParticleIndex; i ++ )
+			for ( var i = 0; i < this._currentZIndex; i ++ )
 			{
 				var vector3 = lineValues.lineGeom.vertices[i];
 				lineValues.lineGeomCurrent.vertices.push(vector3);
@@ -652,9 +741,9 @@ if(namespace.GraphView === undefined)
 			lineValues.particles = this._createParticles(lineValues.particleGeomCurrent);
 			this._graphObj.add(lineValues.particles);
 
-			this._currentParticleIndex ++;
+			this._currentZIndex ++;
 		} else {
-			this._currentParticleIndex = 0;
+			this._currentZIndex = 0;
 			this._countryCount ++;
 		}
 	}
@@ -798,7 +887,7 @@ if(namespace.GraphView === undefined)
 	p._createParticles = function _createParticles(geom)
 	{
 		//create one shared material
-		var sprite = THREE.ImageUtils.loadTexture("../files/img/particle2.png");
+		var sprite = THREE.ImageUtils.loadTexture("../files/img/disc.png");
 		var material = new THREE.ParticleBasicMaterial({
 			size: 5,
 			sizeAttenuation: false,
@@ -890,7 +979,7 @@ if(namespace.GraphView === undefined)
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 		
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: this._gridLineColor, opacity: this._gridLineOpacity } ) );
 			line.position = linePosFuncA( i * stepSize );
 			
 			this._graphObj.add( line );
@@ -913,7 +1002,7 @@ if(namespace.GraphView === undefined)
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 			
-			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } ) );
+			var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: this._gridLineColor, opacity: this._gridLineOpacity } ) );
 			line.position = linePosFuncB( i * stepSize );
 			
 			this._graphObj.add( line );

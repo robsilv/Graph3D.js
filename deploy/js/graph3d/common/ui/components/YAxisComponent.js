@@ -1,21 +1,21 @@
 (function(){
 	
-	var AxisViewModel = GRAPH3D.namespace("GRAPH3D.common.data").AxisViewModel;
-	var namespace = GRAPH3D.namespace("GRAPH3D.common.data");
+	var AxisComponent = GRAPH3D.namespace("GRAPH3D.common.ui.components").AxisComponent;
+	var namespace = GRAPH3D.namespace("GRAPH3D.common.ui.components");
 	
-	if(namespace.YAxisViewModel === undefined) {
+	if(namespace.YAxisComponent === undefined) {
 		
-		var YAxisViewModel = function YAxisViewModel(axisLength, defaultTextSize) {
+		var YAxisComponent = function YAxisComponent(axisLength, defaultTextSize) {
 			this._init(axisLength, defaultTextSize);
 		};
 		
-		namespace.YAxisViewModel = YAxisViewModel;
+		namespace.YAxisComponent = YAxisComponent;
 		
-		var p = YAxisViewModel.prototype = new AxisViewModel();
+		var p = YAxisComponent.prototype = new AxisComponent();
 		
-		YAxisViewModel.create = function create(axisLength, defaultTextSize) 
+		YAxisComponent.create = function create(axisLength, defaultTextSize) 
 		{
-			var newInstance = new YAxisViewModel(axisLength, defaultTextSize);
+			var newInstance = new YAxisComponent(axisLength, defaultTextSize);
 			return newInstance;
 		};
 		

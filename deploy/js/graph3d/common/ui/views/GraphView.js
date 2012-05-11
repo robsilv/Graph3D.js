@@ -1,10 +1,10 @@
 (function(){
 
 var namespace = GRAPH3D.namespace("GRAPH3D.common.ui.views");
-var GraphUtils = GRAPH3D.namespace("GRAPH3D.common.data").GraphUtils;
-var XAxisViewModel = GRAPH3D.namespace("GRAPH3D.common.data").XAxisViewModel;
-var YAxisViewModel = GRAPH3D.namespace("GRAPH3D.common.data").YAxisViewModel;
-var ZAxisViewModel = GRAPH3D.namespace("GRAPH3D.common.data").ZAxisViewModel;
+var GraphUtils = GRAPH3D.namespace("GRAPH3D.common.util").GraphUtils;
+var XAxisComponent = GRAPH3D.namespace("GRAPH3D.common.ui.components").XAxisComponent;
+var YAxisComponent = GRAPH3D.namespace("GRAPH3D.common.ui.components").YAxisComponent;
+var ZAxisComponent = GRAPH3D.namespace("GRAPH3D.common.ui.components").ZAxisComponent;
 var ListenerFunctions = GRAPH3D.namespace("GRAPH3D.utils.events").ListenerFunctions;
 
 //var EventDispatcher = GRAPH3D.namespace("GRAPH3D.utils.events").EventDispatcher;
@@ -39,10 +39,10 @@ if(namespace.GraphView === undefined)
 		this._gridLineColor = 0x444444;
 		this._gridLineOpacity = 1;
 		
-		//
-		
 		this._defaultTextSize = 16;
 		this._axisLength = 1000;
+		
+		//
 		
 		this.dataProvider = null;
 		this._graphUtils = GraphUtils.create();
@@ -51,17 +51,17 @@ if(namespace.GraphView === undefined)
 		this._updateAxesTextCallback = ListenerFunctions.createListenerFunction(this, this._updateAxesText);
 		this._completeTimeCallback = ListenerFunctions.createListenerFunction(this, this._completeTime);		
 		
-		this._xAxisViewModel = XAxisViewModel.create(this._axisLength, this._defaultTextSize);
-		this._xAxisViewModel._updateAxesTextCallback = this._updateAxesTextCallback;
-		this._xAxisViewModel._updateTimeCallback = this._updateTimeCallback;
+		this._xAxis = XAxisComponent.create(this._axisLength, this._defaultTextSize);
+		this._xAxis._updateAxesTextCallback = this._updateAxesTextCallback;
+		this._xAxis._updateTimeCallback = this._updateTimeCallback;
 			
-		this._yAxisViewModel = YAxisViewModel.create(this._axisLength, this._defaultTextSize);
-		this._yAxisViewModel._updateAxesTextCallback = this._updateAxesTextCallback;
-		this._yAxisViewModel._updateTimeCallback = this._updateTimeCallback;
+		this._yAxis = YAxisComponent.create(this._axisLength, this._defaultTextSize);
+		this._yAxis._updateAxesTextCallback = this._updateAxesTextCallback;
+		this._yAxis._updateTimeCallback = this._updateTimeCallback;
 		
-		this._zAxisViewModel = ZAxisViewModel.create(this._axisLength, this._defaultTextSize);
-		this._zAxisViewModel._updateAxesTextCallback = this._updateAxesTextCallback;
-		this._zAxisViewModel._updateTimeCallback = this._updateTimeCallback;
+		this._zAxis = ZAxisComponent.create(this._axisLength, this._defaultTextSize);
+		this._zAxis._updateAxesTextCallback = this._updateAxesTextCallback;
+		this._zAxis._updateTimeCallback = this._updateTimeCallback;
 		
 		this._offsetTop = 0;//window.innerHeight/4*3;
 		this._offsetLeft = 0;//window.innerWidth;
@@ -306,13 +306,13 @@ if(namespace.GraphView === undefined)
 		var tween = this._createGraphTween(this._graphValues, {rX: 0, rY: -Math.PI / 2, rZ: Math.PI / 2}, this._animLength, 0, this._updateTimeCallback);
 		tween.onComplete(this._completeTimeCallback);
 
-		this._xAxisViewModel.axisToBottomView();
-		this._yAxisViewModel.axisToBottomView();
-		this._zAxisViewModel.axisToBottomView();
+		this._xAxis.axisToBottomView();
+		this._yAxis.axisToBottomView();
+		this._zAxis.axisToBottomView();
 		
-		//if (this._xAxisViewModel) 	this._graphObj.add(this._xAxisViewModel.container);
-		//if (this._yAxisViewModel) 	this._graphObj.remove(this._yAxisViewModel);
-		//if (this._zAxisViewModel) 	this._graphObj.add(this._zAxisViewModel);
+		//if (this._xAxis) 	this._graphObj.add(this._xAxis.container);
+		//if (this._yAxis) 	this._graphObj.remove(this._yAxis);
+		//if (this._zAxis) 	this._graphObj.add(this._zAxis);
 	}
 	
 	p.toRightView = function toRightView()
@@ -326,13 +326,13 @@ if(namespace.GraphView === undefined)
 		var tween = this._createGraphTween(this._graphValues, {rX: 0, rY:-Math.PI / 2, rZ: 0}, this._animLength, 0, this._updateTimeCallback);
 		tween.onComplete(this._completeTimeCallback);
 
-		this._xAxisViewModel.axisToDefaultView();
-		this._yAxisViewModel.axisToRightView();
-		this._zAxisViewModel.axisToRightView();
+		this._xAxis.axisToDefaultView();
+		this._yAxis.axisToRightView();
+		this._zAxis.axisToRightView();
 		
-		//if (this._xAxisViewModel) 	this._graphObj.remove(this._xAxisViewModel.container);
-		//if (this._yAxisViewModel) 	this._graphObj.add(this._yAxisViewModel);
-		//if (this._zAxisViewModel) 	this._graphObj.add(this._zAxisViewModel);
+		//if (this._xAxis) 	this._graphObj.remove(this._xAxis.container);
+		//if (this._yAxis) 	this._graphObj.add(this._yAxis);
+		//if (this._zAxis) 	this._graphObj.add(this._zAxis);
 	}
 	
 	p.toFrontView = function toFrontView()
@@ -347,13 +347,13 @@ if(namespace.GraphView === undefined)
 		var tween = this._createGraphTween(this._graphValues, {rX: 0, rY:0, rZ: 0}, this._animLength, 0, this._updateTimeCallback);
 		tween.onComplete(this._completeTimeCallback);
 		
-		this._xAxisViewModel.axisToDefaultView();
-		this._yAxisViewModel.axisToDefaultView();
-		this._zAxisViewModel.axisToRightView();
+		this._xAxis.axisToDefaultView();
+		this._yAxis.axisToDefaultView();
+		this._zAxis.axisToRightView();
 		
-		//if (this._xAxisViewModel) 	this._graphObj.add(this._xAxisViewModel.container);
-		//if (this._yAxisViewModel) 	this._graphObj.add(this._yAxisViewModel);
-		//if (this._zAxisViewModel) 	this._graphObj.remove(this._zAxisViewModel);
+		//if (this._xAxis) 	this._graphObj.add(this._xAxis.container);
+		//if (this._yAxis) 	this._graphObj.add(this._yAxis);
+		//if (this._zAxis) 	this._graphObj.remove(this._zAxis);
 	}
 	
 	p.toOverView = function toOverView()
@@ -367,13 +367,13 @@ if(namespace.GraphView === undefined)
 		var tween = this._createGraphTween(this._graphValues, {rX: Math.PI/12, rY:-Math.PI/4, rZ: 0}, this._animLength, 0, this._updateTimeCallback);
 		tween.onComplete(this._completeTimeCallback);
 		
-		this._xAxisViewModel.axisToDefaultView();
-		this._yAxisViewModel.axisToDefaultView();
-		this._zAxisViewModel.axisToDefaultView();
+		this._xAxis.axisToDefaultView();
+		this._yAxis.axisToDefaultView();
+		this._zAxis.axisToDefaultView();
 		
-		//if (this._xAxisViewModel) 	this._graphObj.add(this._xAxisViewModel.container);
-		//if (this._yAxisViewModel) 	this._graphObj.add(this._yAxisViewModel);
-		//if (this._zAxisViewModel) 	this._graphObj.add(this._zAxisViewModel);
+		//if (this._xAxis) 	this._graphObj.add(this._xAxis.container);
+		//if (this._yAxis) 	this._graphObj.add(this._yAxis);
+		//if (this._zAxis) 	this._graphObj.add(this._zAxis);
 	}
 	
 	p._updateTime = function _updateTime() 
@@ -416,9 +416,9 @@ if(namespace.GraphView === undefined)
 			this._updateGridLines(this._axesObjects.gridXZ, this._axesObjects.animationValues.gridXZ);
 		}
 		
-		this._xAxisViewModel.updateAxis();
-		this._yAxisViewModel.updateAxis();
-		this._zAxisViewModel.updateAxis();
+		this._xAxis.updateAxis();
+		this._yAxis.updateAxis();
+		this._zAxis.updateAxis();
 	};
 	
 	p._updateGridLines = function _updateGridLines(gridObj, gridAnimObj)
@@ -457,9 +457,9 @@ if(namespace.GraphView === undefined)
 	
 	p._updateAxesText = function _updateAxesText()
 	{
-		this._xAxisViewModel.updateAxisText();
-		this._yAxisViewModel.updateAxisText();
-		this._zAxisViewModel.updateAxisText();
+		this._xAxis.updateAxisText();
+		this._yAxis.updateAxisText();
+		this._zAxis.updateAxisText();
 	}
 	
 	p._completeTime = function _completeTime()
@@ -537,31 +537,31 @@ if(namespace.GraphView === undefined)
 		
 		// Compute Axes
 		if ( xAxisLog ) {
-			this._xAxisViewModel.values = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, 0, 10);
-			var vals  = this._xAxisViewModel.values;
+			this._xAxis.values = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, 0, 10);
+			var vals  = this._xAxis.values;
 			//console.log("X-AXIS input: minVal "+data[this._axisTitles.x].minValue+" maxVal "+data[this._axisTitles.x].maxValue+" numFractionalSteps "+0+" base "+10);
 			//console.log("X-AXIS minVal "+vals.minVal+" maxVal "+vals.maxVal+" numSteps "+vals.numSteps+" numLogSteps "+vals.numLogSteps+" numFractionalSteps "+vals.numFractionalSteps+" base "+vals.base+" baseLog "+vals.baseLog); 
 		} else {
-			this._xAxisViewModel.values = this._graphUtils.mapToAxisLinear(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, numSteps, false);
+			this._xAxis.values = this._graphUtils.mapToAxisLinear(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, numSteps, false);
 		}
 		
 		if ( yAxisLog ) {
-			this._yAxisViewModel.values = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, 2, 10);
+			this._yAxis.values = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, 2, 10);
 		} else {
-			this._yAxisViewModel.values = this._graphUtils.mapToAxisLinear(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, numSteps, true);
+			this._yAxis.values = this._graphUtils.mapToAxisLinear(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, numSteps, true);
 		}
 		
 		if ( zAxisLog ) {
 		
 		} else {
-			this._zAxisViewModel.values = this._graphUtils.mapToAxisLinear(zMin, zMax, numSteps, true);
+			this._zAxis.values = this._graphUtils.mapToAxisLinear(zMin, zMax, numSteps, true);
 		}
 		
 		//this._graphUtils.getLogOfBase(100, 10, true);
 
 		// RENDER
 		this.enable();
-		//console.log("Z (Time) axis minVal "+this._zAxisViewModel.values.minVal+" maxVal "+this._zAxisViewModel.values.maxVal);
+		//console.log("Z (Time) axis minVal "+this._zAxis.values.minVal+" maxVal "+this._zAxis.values.maxVal);
 	}
 	
 	p._plotData = function _plotData()
@@ -750,8 +750,8 @@ if(namespace.GraphView === undefined)
 	
 	p._plotLine = function _plotLine(data, color, xTitle, yTitle)
 	{
-		var minZ = this._zAxisViewModel.values.minVal;
-		var maxZ = this._zAxisViewModel.values.maxVal;
+		var minZ = this._zAxis.values.minVal;
+		var maxZ = this._zAxis.values.maxVal;
 		
 		// massage data
 		// Z-Axis is the axis that X and Y data are plotted against.
@@ -805,58 +805,58 @@ if(namespace.GraphView === undefined)
 			
 			
 			// XPOS
-			if ( this._xAxisViewModel.values.logarithmic ) {
+			if ( this._xAxis.values.logarithmic ) {
 				if ( x == 0 ) 	xpos = 0;
 				else {
-					var stepSize = this._axisLength / this._xAxisViewModel.values.numSteps;
-					var numFractionalSteps = this._xAxisViewModel.values.numFractionalSteps;
+					var stepSize = this._axisLength / this._xAxis.values.numSteps;
+					var numFractionalSteps = this._xAxis.values.numFractionalSteps;
 					if ( numFractionalSteps ) 
 					{			
-						var numStepsOffset = this._graphUtils.getLogOfBase( x, this._xAxisViewModel.values.base ); // number of "steps" off from 1
+						var numStepsOffset = this._graphUtils.getLogOfBase( x, this._xAxis.values.base ); // number of "steps" off from 1
 						var xpos = numStepsOffset * stepSize;
 						xpos += numFractionalSteps * stepSize;	// bump it up so 1 is the starting pos
 					} 
 					else
 					{
-						var base = this._xAxisViewModel.values.base;
-						var baseLog = this._xAxisViewModel.values.baseLog;
+						var base = this._xAxis.values.base;
+						var baseLog = this._xAxis.values.baseLog;
 						var numStepsOffset = this._graphUtils.getLogOfBase( x, base ); // number of "steps" off from 1
 						var xpos = (numStepsOffset-baseLog) * stepSize;
 					}
 					//console.log("x "+x+" xpos "+xpos+" stepSize "+stepSize+" numStepsOffset "+numStepsOffset);
 				}
 			} else  {
-				var ratio = this._graphUtils.getRatioAlongAxisLinear( x, this._xAxisViewModel.values.minVal, this._xAxisViewModel.values.maxVal );
+				var ratio = this._graphUtils.getRatioAlongAxisLinear( x, this._xAxis.values.minVal, this._xAxis.values.maxVal );
 				var xpos = ratio * this._axisLength;			
 			}
 
 			// YPOS
-			if ( this._yAxisViewModel.values.logarithmic ) {
+			if ( this._yAxis.values.logarithmic ) {
 				if ( y == 0 ) 	ypos = 0;
 				else {
-					var stepSize = this._axisLength / this._yAxisViewModel.values.numSteps;
-					var numStepsOffset = this._graphUtils.getLogOfBase( y, this._yAxisViewModel.values.base );
+					var stepSize = this._axisLength / this._yAxis.values.numSteps;
+					var numStepsOffset = this._graphUtils.getLogOfBase( y, this._yAxis.values.base );
 					var ypos = numStepsOffset * stepSize;
-					ypos += this._yAxisViewModel.values.numFractionalSteps * stepSize;
+					ypos += this._yAxis.values.numFractionalSteps * stepSize;
 					//console.log("y "+y+" ypos "+ypos+" stepSize "+stepSize+" numStepsOffset "+numStepsOffset);
 				}
 			} else  {			
-				var ratio = this._graphUtils.getRatioAlongAxisLinear( y, this._yAxisViewModel.values.minVal, this._yAxisViewModel.values.maxVal );
+				var ratio = this._graphUtils.getRatioAlongAxisLinear( y, this._yAxis.values.minVal, this._yAxis.values.maxVal );
 				var ypos = ratio * this._axisLength;
 			}			
 
 			// ZPOS
-			if ( this._zAxisViewModel.values.logarithmic ) {
+			if ( this._zAxis.values.logarithmic ) {
 				if ( z == 0 ) 	zpos = 0;
 				else {
-					var stepSize = this._axisLength / this._zAxisViewModel.values.numSteps;
-					var numStepsOffset = this._graphUtils.getLogOfBase( z, this._zAxisViewModel.values.base );
+					var stepSize = this._axisLength / this._zAxis.values.numSteps;
+					var numStepsOffset = this._graphUtils.getLogOfBase( z, this._zAxis.values.base );
 					var zpos = numStepsOffset * stepSize;
-					zpos += this._zAxisViewModel.values.numFractionalSteps * stepSize;
+					zpos += this._zAxis.values.numFractionalSteps * stepSize;
 					//console.log("z "+z+" zpos "+zpos+" stepSize "+stepSize+" numStepsOffset "+numStepsOffset);
 				}			
 			} else  {
-				var ratio = this._graphUtils.getRatioAlongAxisLinear( z, this._zAxisViewModel.values.minVal, this._zAxisViewModel.values.maxVal );
+				var ratio = this._graphUtils.getRatioAlongAxisLinear( z, this._zAxis.values.minVal, this._zAxis.values.maxVal );
 				var zpos = -ratio * this._axisLength;
 			}
 			
@@ -887,7 +887,7 @@ if(namespace.GraphView === undefined)
 	p._createParticles = function _createParticles(geom)
 	{
 		//create one shared material
-		var sprite = THREE.ImageUtils.loadTexture("../files/img/disc.png");
+		var sprite = THREE.ImageUtils.loadTexture("../files/img/disc2.png");
 		var material = new THREE.ParticleBasicMaterial({
 			size: 5,
 			sizeAttenuation: false,
@@ -959,9 +959,9 @@ if(namespace.GraphView === undefined)
 			delay += 500;		
 		}
 
-		this._xAxisViewModel.renderAxis(delay, this._axisTitles.xTitle, this._graphObj);
-		this._yAxisViewModel.renderAxis(delay += 500, this._axisTitles.yTitle, this._graphObj);
-		this._zAxisViewModel.renderAxis(delay += 500, this._axisTitles.zTitle, this._graphObj);
+		this._xAxis.renderAxis(delay, this._axisTitles.xTitle, this._graphObj);
+		this._yAxis.renderAxis(delay += 500, this._axisTitles.yTitle, this._graphObj);
+		this._zAxis.renderAxis(delay += 500, this._axisTitles.zTitle, this._graphObj);
 	}
 	
 	// RENDER GRIDS =========================================
@@ -1029,9 +1029,9 @@ if(namespace.GraphView === undefined)
 	p._renderGridXY = function _renderGridXY()
 	{
 		var scope = this;
-		this._renderGrid( this._xAxisViewModel.values.numSteps, 
+		this._renderGrid( this._xAxis.values.numSteps, 
 						  function(step) { return scope._gridXYLinePosXLines(step); },
-						  this._yAxisViewModel.values.numSteps, 
+						  this._yAxis.values.numSteps, 
 						  function(step) { return scope._gridXYLinePosYLines(step); },
 						  this._axesObjects.gridXY, this._axesObjects.animationValues.gridXY );
 	}
@@ -1039,9 +1039,9 @@ if(namespace.GraphView === undefined)
 	p._renderGridYZ = function _renderGridYZ()
 	{
 		var scope = this;
-		this._renderGrid( this._yAxisViewModel.values.numSteps, 
+		this._renderGrid( this._yAxis.values.numSteps, 
 						  function(step) { return scope._gridYZLinePosYLines(step); },
-						  this._zAxisViewModel.values.numSteps, 
+						  this._zAxis.values.numSteps, 
 						  function(step) { return scope._gridYZLinePosZLines(step); },
 						  this._axesObjects.gridYZ, this._axesObjects.animationValues.gridYZ );
 	}
@@ -1049,9 +1049,9 @@ if(namespace.GraphView === undefined)
 	p._renderGridXZ = function _renderGridXZ()
 	{
 		var scope = this;
-		this._renderGrid( this._xAxisViewModel.values.numSteps, 
+		this._renderGrid( this._xAxis.values.numSteps, 
 						  function(step) { return scope._gridXZLinePosXLines(step); },
-						  this._zAxisViewModel.values.numSteps, 
+						  this._zAxis.values.numSteps, 
 						  function(step) { return scope._gridXZLinePosZLines(step); },
 						  this._axesObjects.gridXZ, this._axesObjects.animationValues.gridXZ );
 	}

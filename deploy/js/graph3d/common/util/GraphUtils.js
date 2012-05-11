@@ -1,6 +1,6 @@
 (function(){
 	
-	var namespace = GRAPH3D.namespace("GRAPH3D.common.data");
+	var namespace = GRAPH3D.namespace("GRAPH3D.common.util");
 	
 	if(namespace.GraphUtils === undefined) {
 		

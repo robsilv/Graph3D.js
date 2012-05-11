@@ -1,21 +1,21 @@
 (function(){
 	
-	var AxisViewModel = GRAPH3D.namespace("GRAPH3D.common.data").AxisViewModel;
-	var namespace = GRAPH3D.namespace("GRAPH3D.common.data");
+	var AxisComponent = GRAPH3D.namespace("GRAPH3D.common.ui.components").AxisComponent;
+	var namespace = GRAPH3D.namespace("GRAPH3D.common.ui.components");
 	
-	if(namespace.XAxisViewModel === undefined) {
+	if(namespace.XAxisComponent === undefined) {
 		
-		var XAxisViewModel = function XAxisViewModel(axisLength, defaultTextSize) {
+		var XAxisComponent = function XAxisComponent(axisLength, defaultTextSize) {
 			this._init(axisLength, defaultTextSize);
 		};
 		
-		namespace.XAxisViewModel = XAxisViewModel;
+		namespace.XAxisComponent = XAxisComponent;
 		
-		var p = XAxisViewModel.prototype = new AxisViewModel();
+		var p = XAxisComponent.prototype = new AxisComponent();
 		
-		XAxisViewModel.create = function create(axisLength, defaultTextSize) 
+		XAxisComponent.create = function create(axisLength, defaultTextSize) 
 		{
-			var newInstance = new XAxisViewModel(axisLength, defaultTextSize);
+			var newInstance = new XAxisComponent(axisLength, defaultTextSize);
 			return newInstance;
 		};
 		

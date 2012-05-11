@@ -44,6 +44,9 @@ if(namespace.GraphView === undefined)
 		
 		//
 		
+		this._currentZIndex = 0; // TODO: needs to be reset when new graph data is loaded
+		
+		this._psTable = {};	// Table for particle systems
 		this.dataProvider = null;
 		this._graphUtils = GraphUtils.create();
 		
@@ -598,6 +601,7 @@ if(namespace.GraphView === undefined)
 		//this._renderAllLines();
 		//this._renderLineByLine();
 		//this._stepThroughZAxis();
+		this._renderZSlice();
 	}
 	
 	// Renders all line immediately
@@ -642,54 +646,106 @@ if(namespace.GraphView === undefined)
 		// On each _renderZSlice() call, each particle will be prompted to tween to its target data
 		// The tweens will take slightly less time to complete than the time taken between _renderZSlice() calls
 		
-		if (!this._particleGeomCurrent) {
-			this._particleGeomCurrent = new THREE.Geometry();
-			this._particleGeomCurrent.colors = [];
-		}
-		
-		var index = 0;
-		
 		console.log("_renderZSlice "+this._currentZIndex);
+		
+		var maxNumInfected = 0;
+		var maxInfectedCountry = "";
 		
 		//Loop through countries
 		for ( var countryName in this._linesData.countriesTable ) 
 		{
 			// get the line data (geom, color) for the country
-			var lineValsForCountry = this._linesData.countriesTable[countryName];
+			var lineValues = this._linesData.countriesTable[countryName];
 
+			var vertices = lineValues.particleGeom.vertices;
+			
 			// get the vector3 point at the currentParticleIndex (this step on the Z slice)
-			var vector3 = lineValsForCountry.particleGeom.vertices[this._currentZIndex];
+			var vector3 = vertices[this._currentZIndex];
 			// If the country has a particle for this step, add it to the current geom and step the index.
 			// If it doesn't, skip the country.
 			if ( vector3 ) 
 			{
-				if (!this._particleGeomCurrent.vertices[index]) {
-					this._particleGeomCurrent.vertices[index] = vector3.clone();
+				var country = this._dataProvider.countries[countryName];
+				var zVal = lineValues.pointsData[this._currentZIndex];
+				var yVal = lineValues.z[zVal].y;
+				var pop = this._dataProvider.countries[countryName].population[zVal];
+				var numInfected = Math.round(yVal / 100 * pop);
+				if ( numInfected > maxNumInfected ) {
+					maxNumInfected = numInfected;
+					maxInfectedCountry = countryName;
+				}
+			}
+		}
+		
+		console.log("max infected "+maxInfectedCountry+" = "+maxNumInfected);
+		
+		
+		var maxVerticesLength = 0;
+	
+		//Loop through countries
+		for ( var countryName in this._linesData.countriesTable ) 
+		{
+			// get the line data (geom, color) for the country
+			var lineValues = this._linesData.countriesTable[countryName];
+
+			var vertices = lineValues.particleGeom.vertices;
+			if ( vertices.length > maxVerticesLength ) {
+				maxVerticesLength = vertices.length;
+			}
+			
+			// get the vector3 point at the currentParticleIndex (this step on the Z slice)
+			var vector3 = vertices[this._currentZIndex];
+			// If the country has a particle for this step, add it to the current geom and step the index.
+			// If it doesn't, skip the country.
+			if ( vector3 ) 
+			{
+				// Create table for particle systems
+				if (!this._psTable[countryName]) {
+					var geom = new THREE.Geometry();
+					geom.colors = [lineValues.particleGeom.colors[this._currentZIndex]];
+					geom.vertices.push(vector3.clone());
+					
+					var psObj = this._psTable[countryName] = {};
+					psObj.pSystem = this._createParticles(geom);
+					this._graphObj.add(psObj.pSystem);
+					
+					//psObj.pSystem.material.size = Math.random() * 20 + 10;
 				} else {
-					var currVector3 = this._particleGeomCurrent.vertices[index];
+					var psObj = this._psTable[countryName];
+					var geom = psObj.pSystem.geometry;
+					var currVector3 = geom.vertices[0];
 					currVector3.x = vector3.x;
 					currVector3.y = vector3.y;
 					currVector3.z = vector3.z;
+					
+					geom.verticesNeedUpdate = true;
 				}
-				this._particleGeomCurrent.colors[index] = lineValsForCountry.particleGeom.colors[this._currentZIndex];
 				
-				index ++;
+				var country = this._dataProvider.countries[countryName];
+				var zVal = lineValues.pointsData[this._currentZIndex];
+				var xVal = lineValues.z[zVal].x;
+				var yVal = lineValues.z[zVal].y;
+				var pop = this._dataProvider.countries[countryName].population[zVal];
+				var infected = Math.round(yVal / 100 * pop);
+				//console.log(countryName+" year "+zVal+" gdp "+xVal+" pcHIV "+yVal+" pop "+pop+" infected "+infected);
+				var minSize = 8;
+				var size = minSize;
+				
+				if ( infected ) {
+					var pcOfMax = infected / maxNumInfected;
+					size = pcOfMax * 50;
+				}
+				
+				size = Math.max(minSize, size);
+				
+				psObj.pSystem.material.size = size;
+				
 			} else {
 				console.log("NO VECTOR "+countryName);
 			}
 		}
-		
-		if (!this._particles) {
-			this._particles = this._createParticles(this._particleGeomCurrent);
-			this._graphObj.add(this._particles);
-		}
-		
-		//this._particles.geometry = this._particleGeomCurrent;
-		this._particleGeomCurrent.verticesNeedUpdate = true;
-		this._particles.material.size = 20;
-		
-		var vertices = lineValsForCountry.particleGeom.vertices;
-		if ( this._currentZIndex < vertices.length + 1 )
+
+		if ( this._currentZIndex < maxVerticesLength + 1 )
 		{
 			this._currentZIndex ++;			
 		} else {
@@ -788,9 +844,11 @@ if(namespace.GraphView === undefined)
 		//init Particles
 		var lineGeom = new THREE.Geometry();
 		var particleGeom = new THREE.Geometry();
+		var pointsData = [];
 
 		var prevYValue = 0;
 		var prevXValue = 0;
+		var i = 0;
 		
 		for ( var z in lineValues.z )
 		{
@@ -832,13 +890,18 @@ if(namespace.GraphView === undefined)
 			particleGeom.vertices.push(pos);
 			lineGeom.vertices.push(pos);
 			
+			pointsData.push(z);
+			
 			colors.push(color);		
+			i ++;
 		}
 		
 		particleGeom.colors = colors;
 		
 		lineValues.lineGeom = lineGeom;
 		lineValues.particleGeom = particleGeom;
+		lineValues.pointsData = pointsData;
+		
 		//lineValues.color = color;
 		
 		return lineValues;
@@ -854,7 +917,7 @@ if(namespace.GraphView === undefined)
 	
 	p._createParticles = function _createParticles(geom)
 	{
-		//create one shared material
+		//create one shared material (per particle system)
 		var sprite = THREE.ImageUtils.loadTexture("../files/img/disc2.png");
 		var material = new THREE.ParticleBasicMaterial({
 			size: 5,

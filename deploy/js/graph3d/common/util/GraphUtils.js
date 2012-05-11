@@ -90,6 +90,7 @@
 			return { minVal: graphMinVal, maxVal:finalMaxVal , stepSize:stepSize, numSteps:maxNumSteps };		
 		}
 		
+		// TODO: numFractionalSteps can be determined by comparing the minVal to Math.pow(1/base, n)
 		p.mapToAxisLogarithmic = function mapToAxisLogarithmic(minVal, maxVal, numFractionalSteps, base)
 		{
 			var diff = maxVal - minVal;
@@ -147,6 +148,30 @@
 			
 			return ratio;
 		}
+		
+		// TODO: This function should return a ratio (not a position) which takes into account numFractionalSteps
+		p.getPosAlongAxisLogarithmic = function getPosAlongAxisLogarithmic( value, axisLength, numSteps, base, baseLog, numFractionalSteps )
+		{
+			var pos = 0;
+			
+			if ( value == 0 ) 	return pos;
+			
+			var stepSize = axisLength / numSteps;
+			if ( numFractionalSteps ) 
+			{			
+				var numStepsOffset = this.getLogOfBase( value, base ); // number of "steps" off from 1
+				pos = numStepsOffset * stepSize;
+				pos += numFractionalSteps * stepSize;	// bump it up so 1 is the starting pos
+			} 
+			else
+			{
+				var numStepsOffset = this.getLogOfBase( value, base ); // number of "steps" off from 1
+				pos = (numStepsOffset-baseLog) * stepSize;
+			}
+			//console.log("x "+x+" xpos "+xpos+" stepSize "+stepSize+" numStepsOffset "+numStepsOffset);
+			
+			return pos;
+		}		
 	}
 })();
 

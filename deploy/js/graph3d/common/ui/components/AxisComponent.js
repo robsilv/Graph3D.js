@@ -28,6 +28,8 @@
 			
 			//
 			
+			this.data = {};
+			
 			this._axisLength = axisLength;
 			this._defaultTextSize = defaultTextSize;
 			
@@ -38,7 +40,7 @@
 			this.animationValues = { lines: [], text: [], markers: [], titleText: {}, container: {} };
 			this.container = new THREE.Object3D();
 			
-			this.values = null; // graph data
+			this.data = null; // graph data
 			
 			//this._updateAxesTextCallback = updateAxesTextCallback;
 			//this._updateTimeCallback = updateTimeCallback;
@@ -52,8 +54,8 @@
 		// INTIAL RENDER ===============================
 		p.renderAxis = function renderAxis(delay, title, graphObj)
 		{
-			var axisNum = this.values.minVal;
-			var numSteps = this.values.numSteps;
+			var axisNum = this.data.minVal;
+			var numSteps = this.data.numSteps;
 			
 			graphObj.add( this.container );	
 			
@@ -97,25 +99,25 @@
 				
 				delay += 50;
 				
-				if ( this.values.logarithmic ) 
+				if ( this.data.logarithmic ) 
 				{
-					var numFractionalSteps = this.values.numFractionalSteps;
+					var numFractionalSteps = this.data.numFractionalSteps;
 					
 					if ( numFractionalSteps ) 
 					{					
 						var multiplier = Math.pow( 10, numFractionalSteps - 1 ); // to round the number
 						if ( i < numFractionalSteps - 1 ) {
-							axisNum = Math.round( Math.pow( 1/this.values.base, numFractionalSteps - (i+1)) * multiplier ) / multiplier;
+							axisNum = Math.round( Math.pow( 1/this.data.base, numFractionalSteps - (i+1)) * multiplier ) / multiplier;
 						} else {
-							axisNum = Math.pow(this.values.base, (i+1)-numFractionalSteps);
+							axisNum = Math.pow(this.data.base, (i+1)-numFractionalSteps);
 						}
 					} else {
-						//axisNum = Math.pow(this.values.base, ((i+2)*this.values.baseLog)-numFractionalSteps);
-						axisNum = Math.pow(this.values.base, i+this.values.baseLog);
-						axisNum *= this.values.base; // shift them right one
+						//axisNum = Math.pow(this.data.base, ((i+2)*this.data.baseLog)-numFractionalSteps);
+						axisNum = Math.pow(this.data.base, i+this.data.baseLog);
+						axisNum *= this.data.base; // shift them right one
 					}
 				} else {
-					axisNum += this.values.stepSize;
+					axisNum += this.data.stepSize;
 				}
 			}
 			
@@ -328,7 +330,7 @@
 		}		
 		
 		
-		// VALUES ===========================================
+		// data ===========================================
 		p._getAxisInitState = function _getAxisInitState()
 		{
 			var state = { position: new THREE.Vector3(0, 0, 0),

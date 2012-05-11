@@ -537,31 +537,31 @@ if(namespace.GraphView === undefined)
 		
 		// Compute Axes
 		if ( xAxisLog ) {
-			this._xAxis.values = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, 0, 10);
-			var vals  = this._xAxis.values;
+			this._xAxis.data = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, 0, 10);
+			//var vals  = this._xAxis.data;
 			//console.log("X-AXIS input: minVal "+data[this._axisTitles.x].minValue+" maxVal "+data[this._axisTitles.x].maxValue+" numFractionalSteps "+0+" base "+10);
 			//console.log("X-AXIS minVal "+vals.minVal+" maxVal "+vals.maxVal+" numSteps "+vals.numSteps+" numLogSteps "+vals.numLogSteps+" numFractionalSteps "+vals.numFractionalSteps+" base "+vals.base+" baseLog "+vals.baseLog); 
 		} else {
-			this._xAxis.values = this._graphUtils.mapToAxisLinear(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, numSteps, false);
+			this._xAxis.data = this._graphUtils.mapToAxisLinear(data[this._axisTitles.x].minValue, data[this._axisTitles.x].maxValue, numSteps, false);
 		}
 		
 		if ( yAxisLog ) {
-			this._yAxis.values = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, 2, 10);
+			this._yAxis.data = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, 2, 10);
 		} else {
-			this._yAxis.values = this._graphUtils.mapToAxisLinear(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, numSteps, true);
+			this._yAxis.data = this._graphUtils.mapToAxisLinear(data[this._axisTitles.y].minValue, data[this._axisTitles.y].maxValue, numSteps, true);
 		}
 		
 		if ( zAxisLog ) {
-		
+			this._zAxis.data = this._graphUtils.mapToAxisLogarithmic(data[this._axisTitles.z].minValue, data[this._axisTitles.z].maxValue, 0, 10);
 		} else {
-			this._zAxis.values = this._graphUtils.mapToAxisLinear(zMin, zMax, numSteps, true);
+			this._zAxis.data = this._graphUtils.mapToAxisLinear(zMin, zMax, numSteps, true);
 		}
 		
 		//this._graphUtils.getLogOfBase(100, 10, true);
 
 		// RENDER
 		this.enable();
-		//console.log("Z (Time) axis minVal "+this._zAxis.values.minVal+" maxVal "+this._zAxis.values.maxVal);
+		//console.log("Z (Time) axis minVal "+this._zAxis.data.minVal+" maxVal "+this._zAxis.data.maxVal);
 	}
 	
 	p._plotData = function _plotData()
@@ -637,9 +637,9 @@ if(namespace.GraphView === undefined)
 		// Each country needs it's own particle system (PS)
 		// The PS will contain only one particle, which will animate it's position and size over time (all particles in a PS must be the same size)
 		// The PS's will be stored in a table using the country name as a key.
-		// The object containing the PS will also contain other values, e.g. animation values: targetSize and a targetPosition
+		// The object containing the PS will also contain other data, e.g. animation data: targetSize and a targetPosition
 		// An object will be added to the table for each country as required
-		// On each _renderZSlice() call, each particle will be prompted to tween to its target values
+		// On each _renderZSlice() call, each particle will be prompted to tween to its target data
 		// The tweens will take slightly less time to complete than the time taken between _renderZSlice() calls
 		
 		if (!this._particleGeomCurrent) {
@@ -750,12 +750,12 @@ if(namespace.GraphView === undefined)
 	
 	p._plotLine = function _plotLine(data, color, xTitle, yTitle)
 	{
-		var minZ = this._zAxis.values.minVal;
-		var maxZ = this._zAxis.values.maxVal;
+		var minZ = this._zAxis.data.minVal;
+		var maxZ = this._zAxis.data.maxVal;
 		
 		// massage data
 		// Z-Axis is the axis that X and Y data are plotted against.
-		// Loop through the X and Y axes values for the line, storing them on a new object in terms of Z.
+		// Loop through the X and Y axes data for the line, storing them on a new object in terms of Z.
 		
 		var lineValues = { z: {} };
 		for ( var zVal in data[xTitle] )
@@ -805,58 +805,26 @@ if(namespace.GraphView === undefined)
 			
 			
 			// XPOS
-			if ( this._xAxis.values.logarithmic ) {
-				if ( x == 0 ) 	xpos = 0;
-				else {
-					var stepSize = this._axisLength / this._xAxis.values.numSteps;
-					var numFractionalSteps = this._xAxis.values.numFractionalSteps;
-					if ( numFractionalSteps ) 
-					{			
-						var numStepsOffset = this._graphUtils.getLogOfBase( x, this._xAxis.values.base ); // number of "steps" off from 1
-						var xpos = numStepsOffset * stepSize;
-						xpos += numFractionalSteps * stepSize;	// bump it up so 1 is the starting pos
-					} 
-					else
-					{
-						var base = this._xAxis.values.base;
-						var baseLog = this._xAxis.values.baseLog;
-						var numStepsOffset = this._graphUtils.getLogOfBase( x, base ); // number of "steps" off from 1
-						var xpos = (numStepsOffset-baseLog) * stepSize;
-					}
-					//console.log("x "+x+" xpos "+xpos+" stepSize "+stepSize+" numStepsOffset "+numStepsOffset);
-				}
+			if ( this._xAxis.data.logarithmic ) {
+				var xpos = this._graphUtils.getPosAlongAxisLogarithmic( x, this._axisLength, this._xAxis.data.numSteps, this._xAxis.data.base, this._xAxis.data.baseLog, this._xAxis.data.numFractionalSteps );
 			} else  {
-				var ratio = this._graphUtils.getRatioAlongAxisLinear( x, this._xAxis.values.minVal, this._xAxis.values.maxVal );
+				var ratio = this._graphUtils.getRatioAlongAxisLinear( x, this._xAxis.data.minVal, this._xAxis.data.maxVal );
 				var xpos = ratio * this._axisLength;			
 			}
 
 			// YPOS
-			if ( this._yAxis.values.logarithmic ) {
-				if ( y == 0 ) 	ypos = 0;
-				else {
-					var stepSize = this._axisLength / this._yAxis.values.numSteps;
-					var numStepsOffset = this._graphUtils.getLogOfBase( y, this._yAxis.values.base );
-					var ypos = numStepsOffset * stepSize;
-					ypos += this._yAxis.values.numFractionalSteps * stepSize;
-					//console.log("y "+y+" ypos "+ypos+" stepSize "+stepSize+" numStepsOffset "+numStepsOffset);
-				}
+			if ( this._yAxis.data.logarithmic ) {
+				var ypos = this._graphUtils.getPosAlongAxisLogarithmic( y, this._axisLength, this._yAxis.data.numSteps, this._yAxis.data.base, this._yAxis.data.baseLog, this._yAxis.data.numFractionalSteps );
 			} else  {			
-				var ratio = this._graphUtils.getRatioAlongAxisLinear( y, this._yAxis.values.minVal, this._yAxis.values.maxVal );
+				var ratio = this._graphUtils.getRatioAlongAxisLinear( y, this._yAxis.data.minVal, this._yAxis.data.maxVal );
 				var ypos = ratio * this._axisLength;
 			}			
 
 			// ZPOS
-			if ( this._zAxis.values.logarithmic ) {
-				if ( z == 0 ) 	zpos = 0;
-				else {
-					var stepSize = this._axisLength / this._zAxis.values.numSteps;
-					var numStepsOffset = this._graphUtils.getLogOfBase( z, this._zAxis.values.base );
-					var zpos = numStepsOffset * stepSize;
-					zpos += this._zAxis.values.numFractionalSteps * stepSize;
-					//console.log("z "+z+" zpos "+zpos+" stepSize "+stepSize+" numStepsOffset "+numStepsOffset);
-				}			
+			if ( this._zAxis.data.logarithmic ) {
+				var zpos = this._graphUtils.getPosAlongAxisLogarithmic( z, this._axisLength, this._zAxis.data.numSteps, this._zAxis.data.base, this._zAxis.data.baseLog, this._zAxis.data.numFractionalSteps );
 			} else  {
-				var ratio = this._graphUtils.getRatioAlongAxisLinear( z, this._zAxis.values.minVal, this._zAxis.values.maxVal );
+				var ratio = this._graphUtils.getRatioAlongAxisLinear( z, this._zAxis.data.minVal, this._zAxis.data.maxVal );
 				var zpos = -ratio * this._axisLength;
 			}
 			
@@ -1029,9 +997,9 @@ if(namespace.GraphView === undefined)
 	p._renderGridXY = function _renderGridXY()
 	{
 		var scope = this;
-		this._renderGrid( this._xAxis.values.numSteps, 
+		this._renderGrid( this._xAxis.data.numSteps, 
 						  function(step) { return scope._gridXYLinePosXLines(step); },
-						  this._yAxis.values.numSteps, 
+						  this._yAxis.data.numSteps, 
 						  function(step) { return scope._gridXYLinePosYLines(step); },
 						  this._axesObjects.gridXY, this._axesObjects.animationValues.gridXY );
 	}
@@ -1039,9 +1007,9 @@ if(namespace.GraphView === undefined)
 	p._renderGridYZ = function _renderGridYZ()
 	{
 		var scope = this;
-		this._renderGrid( this._yAxis.values.numSteps, 
+		this._renderGrid( this._yAxis.data.numSteps, 
 						  function(step) { return scope._gridYZLinePosYLines(step); },
-						  this._zAxis.values.numSteps, 
+						  this._zAxis.data.numSteps, 
 						  function(step) { return scope._gridYZLinePosZLines(step); },
 						  this._axesObjects.gridYZ, this._axesObjects.animationValues.gridYZ );
 	}
@@ -1049,9 +1017,9 @@ if(namespace.GraphView === undefined)
 	p._renderGridXZ = function _renderGridXZ()
 	{
 		var scope = this;
-		this._renderGrid( this._xAxis.values.numSteps, 
+		this._renderGrid( this._xAxis.data.numSteps, 
 						  function(step) { return scope._gridXZLinePosXLines(step); },
-						  this._zAxis.values.numSteps, 
+						  this._zAxis.data.numSteps, 
 						  function(step) { return scope._gridXZLinePosZLines(step); },
 						  this._axesObjects.gridXZ, this._axesObjects.animationValues.gridXZ );
 	}
